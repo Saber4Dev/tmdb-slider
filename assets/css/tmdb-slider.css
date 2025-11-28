@@ -1,0 +1,354 @@
+/**
+ * TMDB Slider Styles
+ *
+ * @package TMDB_Slider
+ * @since 1.0.0
+ */
+
+/* ============================================
+   Common Styles
+   ============================================ */
+
+.tmdb-slider-error,
+.tmdb-slider-disabled {
+	padding: 15px;
+	background-color: #f8d7da;
+	color: #721c24;
+	border: 1px solid #f5c6cb;
+	border-radius: 4px;
+	margin: 20px 0;
+}
+
+.tmdb-slider-disabled {
+	background-color: #fff3cd;
+	color: #856404;
+	border-color: #ffeaa7;
+}
+
+/* ============================================
+   Hero Slider
+   ============================================ */
+
+.tmdb-hero-slider {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	height: 500px;
+	margin: 20px 0;
+}
+
+.tmdb-hero-slider-track {
+	display: flex;
+	width: fit-content;
+	animation: tmdb-hero-scroll linear infinite;
+	will-change: transform;
+}
+
+.tmdb-hero-slider:hover .tmdb-hero-slider-track {
+	animation-play-state: paused;
+}
+
+.tmdb-hero-slide {
+	min-width: 100vw;
+	height: 500px;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.tmdb-hero-backdrop {
+	width: 100%;
+	height: 100%;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.tmdb-hero-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.2);
+	transition: background 0.3s ease;
+}
+
+.tmdb-hero-slide:hover .tmdb-hero-overlay {
+	background: rgba(0, 0, 0, 0.4);
+}
+
+.tmdb-hero-overlay a {
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+}
+
+.tmdb-hero-slide a {
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+}
+
+/* Hero Play Icon */
+.tmdb-hero-overlay .tmdb-play-icon {
+	position: absolute;
+	bottom: 30px;
+	right: 30px;
+	width: 60px;
+	height: 60px;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px;
+	color: #000;
+	transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.tmdb-hero-slide:hover .tmdb-play-icon {
+	transform: scale(1.1);
+	background: rgba(255, 255, 255, 1);
+}
+
+/* Hero Rating */
+.tmdb-hero-overlay .tmdb-rating {
+	position: absolute;
+	top: 20px;
+	right: 20px;
+	background: rgba(0, 0, 0, 0.7);
+	color: #fff;
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-size: 14px;
+	font-weight: bold;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.tmdb-hero-slide:hover .tmdb-rating {
+	opacity: 1;
+}
+
+/* Hero Animation */
+@keyframes tmdb-hero-scroll {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+/* ============================================
+   Row Slider
+   ============================================ */
+
+.tmdb-row-slider {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	margin: 30px 0;
+	padding: 20px 0;
+}
+
+.tmdb-row-slider-track {
+	display: flex;
+	width: fit-content;
+	animation: tmdb-row-scroll linear infinite;
+	will-change: transform;
+	gap: 15px;
+}
+
+.tmdb-row-slider:hover .tmdb-row-slider-track {
+	animation-play-state: paused;
+}
+
+.tmdb-row-slide {
+	flex-shrink: 0;
+	position: relative;
+}
+
+.tmdb-poster-wrapper {
+	position: relative;
+	width: var(--poster-width, 220px);
+	height: calc(var(--poster-width, 220px) * 1.5);
+	overflow: hidden;
+	border-radius: 8px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tmdb-poster-wrapper:hover {
+	transform: scale(1.05);
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+	z-index: 10;
+}
+
+.tmdb-poster {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.tmdb-poster-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0);
+	transition: background 0.3s ease;
+}
+
+.tmdb-poster-wrapper:hover .tmdb-poster-overlay {
+	background: rgba(0, 0, 0, 0.3);
+}
+
+.tmdb-row-slide a {
+	display: block;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+}
+
+/* Row Play Icon */
+.tmdb-poster-overlay .tmdb-play-icon {
+	position: absolute;
+	bottom: 15px;
+	right: 15px;
+	width: 45px;
+	height: 45px;
+	background: rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	color: #000;
+	transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.tmdb-poster-wrapper:hover .tmdb-play-icon {
+	transform: scale(1.1);
+	background: rgba(255, 255, 255, 1);
+}
+
+/* Row Rating */
+.tmdb-poster-overlay .tmdb-rating {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: rgba(0, 0, 0, 0.7);
+	color: #fff;
+	padding: 6px 10px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.tmdb-poster-wrapper:hover .tmdb-rating {
+	opacity: 1;
+}
+
+/* Row Poster Name */
+.tmdb-poster-name {
+	margin-top: 10px;
+	font-size: 14px;
+	font-weight: 500;
+	color: #333;
+	text-align: center;
+	max-width: var(--poster-width, 220px);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tmdb-row-slide a + .tmdb-poster-name,
+.tmdb-row-slide .tmdb-poster-wrapper + .tmdb-poster-name {
+	margin-top: 10px;
+}
+
+/* Row Animation */
+@keyframes tmdb-row-scroll {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 768px) {
+	.tmdb-hero-slider {
+		height: 300px;
+	}
+
+	.tmdb-hero-slide {
+		height: 300px;
+	}
+
+	.tmdb-hero-overlay .tmdb-play-icon {
+		width: 50px;
+		height: 50px;
+		font-size: 20px;
+		bottom: 20px;
+		right: 20px;
+	}
+
+	.tmdb-poster-wrapper {
+		width: 160px;
+		height: 240px;
+	}
+
+	.tmdb-poster-overlay .tmdb-play-icon {
+		width: 35px;
+		height: 35px;
+		font-size: 14px;
+		bottom: 10px;
+		right: 10px;
+	}
+}
+
+@media (max-width: 480px) {
+	.tmdb-hero-slider {
+		height: 250px;
+	}
+
+	.tmdb-hero-slide {
+		height: 250px;
+	}
+
+	.tmdb-poster-wrapper {
+		width: 140px;
+		height: 210px;
+	}
+}
+
+/* ============================================
+   Dynamic Speed Control
+   ============================================ */
+
+.tmdb-hero-slider .tmdb-hero-slider-track {
+	animation-duration: calc(var(--speed, 50) * 1s);
+}
+
+.tmdb-row-slider .tmdb-row-slider-track {
+	animation-duration: calc(var(--speed, 60) * 1s);
+}
+
