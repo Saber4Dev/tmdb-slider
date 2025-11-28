@@ -44,10 +44,6 @@
 	will-change: transform;
 }
 
-.tmdb-hero-slider:hover .tmdb-hero-slider-track {
-	animation-play-state: paused;
-}
-
 .tmdb-hero-slide {
 	min-width: 100vw;
 	height: 500px;
@@ -163,10 +159,6 @@
 	animation: tmdb-row-scroll linear infinite;
 	will-change: transform;
 	gap: 15px;
-}
-
-.tmdb-row-slider:hover .tmdb-row-slider-track {
-	animation-play-state: paused;
 }
 
 .tmdb-row-slide {

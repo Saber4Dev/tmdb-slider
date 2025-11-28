@@ -63,6 +63,7 @@ class TMDB_Slider_Plugin {
 		require_once TMDB_SLIDER_PLUGIN_DIR . 'includes/class-tmdb-slider-api.php';
 		require_once TMDB_SLIDER_PLUGIN_DIR . 'includes/class-tmdb-slider-admin.php';
 		require_once TMDB_SLIDER_PLUGIN_DIR . 'includes/class-tmdb-slider-front.php';
+		require_once TMDB_SLIDER_PLUGIN_DIR . 'includes/class-tmdb-slider-updater.php';
 	}
 
 	/**
@@ -75,6 +76,11 @@ class TMDB_Slider_Plugin {
 			false,
 			dirname( plugin_basename( TMDB_SLIDER_PLUGIN_FILE ) ) . '/languages'
 		);
+
+		// Initialize updater
+		if ( is_admin() ) {
+			new TMDB_Slider_Updater( TMDB_SLIDER_PLUGIN_FILE );
+		}
 
 		// Initialize admin
 		if ( is_admin() ) {
@@ -107,6 +113,16 @@ class TMDB_Slider_Plugin {
 			'show_rating' => 1,
 			'show_names' => 1,
 			'make_poster_clickable' => 1,
+			'reverse_hero_slider' => 0,
+			'reverse_popular_slider' => 0,
+			'reverse_top_rated_slider' => 0,
+			'reverse_now_playing_slider' => 0,
+			'reverse_sports_slider' => 0,
+			'stop_on_hover_hero_slider' => 1,
+			'stop_on_hover_popular_slider' => 1,
+			'stop_on_hover_top_rated_slider' => 1,
+			'stop_on_hover_now_playing_slider' => 1,
+			'stop_on_hover_sports_slider' => 1,
 		);
 
 		$existing_settings = get_option( 'tmdb_slider_settings', array() );

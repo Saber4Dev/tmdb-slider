@@ -118,6 +118,16 @@ class TMDB_Slider_Front {
 			'show_rating' => isset( $settings['show_rating'] ) ? (int) $settings['show_rating'] : 1,
 			'show_names' => isset( $settings['show_names'] ) ? (int) $settings['show_names'] : 1,
 			'make_poster_clickable' => isset( $settings['make_poster_clickable'] ) ? (int) $settings['make_poster_clickable'] : 1,
+			'reverse_hero_slider' => isset( $settings['reverse_hero_slider'] ) ? (int) $settings['reverse_hero_slider'] : 0,
+			'reverse_popular_slider' => isset( $settings['reverse_popular_slider'] ) ? (int) $settings['reverse_popular_slider'] : 0,
+			'reverse_top_rated_slider' => isset( $settings['reverse_top_rated_slider'] ) ? (int) $settings['reverse_top_rated_slider'] : 0,
+			'reverse_now_playing_slider' => isset( $settings['reverse_now_playing_slider'] ) ? (int) $settings['reverse_now_playing_slider'] : 0,
+			'reverse_sports_slider' => isset( $settings['reverse_sports_slider'] ) ? (int) $settings['reverse_sports_slider'] : 0,
+			'stop_on_hover_hero_slider' => isset( $settings['stop_on_hover_hero_slider'] ) ? (int) $settings['stop_on_hover_hero_slider'] : 1,
+			'stop_on_hover_popular_slider' => isset( $settings['stop_on_hover_popular_slider'] ) ? (int) $settings['stop_on_hover_popular_slider'] : 1,
+			'stop_on_hover_top_rated_slider' => isset( $settings['stop_on_hover_top_rated_slider'] ) ? (int) $settings['stop_on_hover_top_rated_slider'] : 1,
+			'stop_on_hover_now_playing_slider' => isset( $settings['stop_on_hover_now_playing_slider'] ) ? (int) $settings['stop_on_hover_now_playing_slider'] : 1,
+			'stop_on_hover_sports_slider' => isset( $settings['stop_on_hover_sports_slider'] ) ? (int) $settings['stop_on_hover_sports_slider'] : 1,
 		);
 	}
 
@@ -354,6 +364,8 @@ class TMDB_Slider_Front {
 		$show_play_icon = $settings['show_play_icon'];
 		$show_rating = $settings['show_rating'];
 		$make_clickable = $settings['make_poster_clickable'];
+		$reverse = $settings['reverse_hero_slider'];
+		$stop_on_hover = $settings['stop_on_hover_hero_slider'];
 
 		// Filter movies with backdrops
 		$movies_with_backdrops = array_filter( $movies, function( $movie ) {
@@ -369,7 +381,7 @@ class TMDB_Slider_Front {
 
 		ob_start();
 		?>
-		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>">
+		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
 			<div class="tmdb-hero-slider-track">
 				<?php foreach ( $all_movies as $movie ) : ?>
 					<?php
@@ -520,6 +532,8 @@ class TMDB_Slider_Front {
 		$show_play_icon = $settings['show_play_icon'];
 		$show_rating = $settings['show_rating'];
 		$make_clickable = $settings['make_poster_clickable'];
+		$reverse = $settings['reverse_hero_slider'];
+		$stop_on_hover = $settings['stop_on_hover_hero_slider'];
 
 		// Filter shows with backdrops
 		$shows_with_backdrops = array_filter( $shows, function( $show ) {
@@ -535,7 +549,7 @@ class TMDB_Slider_Front {
 
 		ob_start();
 		?>
-		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>">
+		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
 			<div class="tmdb-hero-slider-track">
 				<?php foreach ( $all_shows as $show ) : ?>
 					<?php
@@ -671,6 +685,23 @@ class TMDB_Slider_Front {
 		$show_rating = $settings['show_rating'];
 		$show_names = $settings['show_names'];
 		$make_clickable = $settings['make_poster_clickable'];
+		
+		// Determine reverse and stop on hover based on slider type
+		$reverse = 0;
+		$stop_on_hover = 1;
+		if ( 'popular' === $slider_id || 'movie-popular' === $slider_id || 'tv-popular' === $slider_id ) {
+			$reverse = $settings['reverse_popular_slider'];
+			$stop_on_hover = $settings['stop_on_hover_popular_slider'];
+		} elseif ( 'top-rated' === $slider_id || 'movie-top-rated' === $slider_id || 'tv-top-rated' === $slider_id ) {
+			$reverse = $settings['reverse_top_rated_slider'];
+			$stop_on_hover = $settings['stop_on_hover_top_rated_slider'];
+		} elseif ( 'now-playing' === $slider_id || 'movie-now-playing' === $slider_id || 'tv-on-air' === $slider_id ) {
+			$reverse = $settings['reverse_now_playing_slider'];
+			$stop_on_hover = $settings['stop_on_hover_now_playing_slider'];
+		} elseif ( 'sports' === $slider_id ) {
+			$reverse = $settings['reverse_sports_slider'];
+			$stop_on_hover = $settings['stop_on_hover_sports_slider'];
+		}
 
 		// Filter items with posters
 		$items_with_posters = array_filter( $items, function( $item ) {
@@ -686,7 +717,7 @@ class TMDB_Slider_Front {
 
 		ob_start();
 		?>
-		<div class="tmdb-row-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-poster-width="<?php echo esc_attr( $poster_width ); ?>">
+		<div class="tmdb-row-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-poster-width="<?php echo esc_attr( $poster_width ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
 			<div class="tmdb-row-slider-track">
 				<?php foreach ( $all_items as $item ) : ?>
 					<?php

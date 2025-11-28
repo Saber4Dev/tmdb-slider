@@ -24,6 +24,7 @@ class TMDB_Slider_Admin {
 	public function init() {
 		add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( TMDB_SLIDER_PLUGIN_FILE ), array( $this, 'add_action_links' ) );
 	}
 
 	/**
@@ -133,6 +134,68 @@ class TMDB_Slider_Admin {
 			$sanitized['make_poster_clickable'] = 0;
 		}
 
+		// Reverse direction options
+		if ( isset( $input['reverse_hero_slider'] ) ) {
+			$sanitized['reverse_hero_slider'] = 1;
+		} else {
+			$sanitized['reverse_hero_slider'] = 0;
+		}
+
+		if ( isset( $input['reverse_popular_slider'] ) ) {
+			$sanitized['reverse_popular_slider'] = 1;
+		} else {
+			$sanitized['reverse_popular_slider'] = 0;
+		}
+
+		if ( isset( $input['reverse_top_rated_slider'] ) ) {
+			$sanitized['reverse_top_rated_slider'] = 1;
+		} else {
+			$sanitized['reverse_top_rated_slider'] = 0;
+		}
+
+		if ( isset( $input['reverse_now_playing_slider'] ) ) {
+			$sanitized['reverse_now_playing_slider'] = 1;
+		} else {
+			$sanitized['reverse_now_playing_slider'] = 0;
+		}
+
+		if ( isset( $input['reverse_sports_slider'] ) ) {
+			$sanitized['reverse_sports_slider'] = 1;
+		} else {
+			$sanitized['reverse_sports_slider'] = 0;
+		}
+
+		// Stop on hover options
+		if ( isset( $input['stop_on_hover_hero_slider'] ) ) {
+			$sanitized['stop_on_hover_hero_slider'] = 1;
+		} else {
+			$sanitized['stop_on_hover_hero_slider'] = 0;
+		}
+
+		if ( isset( $input['stop_on_hover_popular_slider'] ) ) {
+			$sanitized['stop_on_hover_popular_slider'] = 1;
+		} else {
+			$sanitized['stop_on_hover_popular_slider'] = 0;
+		}
+
+		if ( isset( $input['stop_on_hover_top_rated_slider'] ) ) {
+			$sanitized['stop_on_hover_top_rated_slider'] = 1;
+		} else {
+			$sanitized['stop_on_hover_top_rated_slider'] = 0;
+		}
+
+		if ( isset( $input['stop_on_hover_now_playing_slider'] ) ) {
+			$sanitized['stop_on_hover_now_playing_slider'] = 1;
+		} else {
+			$sanitized['stop_on_hover_now_playing_slider'] = 0;
+		}
+
+		if ( isset( $input['stop_on_hover_sports_slider'] ) ) {
+			$sanitized['stop_on_hover_sports_slider'] = 1;
+		} else {
+			$sanitized['stop_on_hover_sports_slider'] = 0;
+		}
+
 		return $sanitized;
 	}
 
@@ -159,6 +222,16 @@ class TMDB_Slider_Admin {
 		$show_rating = isset( $settings['show_rating'] ) ? $settings['show_rating'] : 1;
 		$show_names = isset( $settings['show_names'] ) ? $settings['show_names'] : 1;
 		$make_poster_clickable = isset( $settings['make_poster_clickable'] ) ? $settings['make_poster_clickable'] : 1;
+		$reverse_hero_slider = isset( $settings['reverse_hero_slider'] ) ? $settings['reverse_hero_slider'] : 0;
+		$reverse_popular_slider = isset( $settings['reverse_popular_slider'] ) ? $settings['reverse_popular_slider'] : 0;
+		$reverse_top_rated_slider = isset( $settings['reverse_top_rated_slider'] ) ? $settings['reverse_top_rated_slider'] : 0;
+		$reverse_now_playing_slider = isset( $settings['reverse_now_playing_slider'] ) ? $settings['reverse_now_playing_slider'] : 0;
+		$reverse_sports_slider = isset( $settings['reverse_sports_slider'] ) ? $settings['reverse_sports_slider'] : 0;
+		$stop_on_hover_hero_slider = isset( $settings['stop_on_hover_hero_slider'] ) ? $settings['stop_on_hover_hero_slider'] : 1;
+		$stop_on_hover_popular_slider = isset( $settings['stop_on_hover_popular_slider'] ) ? $settings['stop_on_hover_popular_slider'] : 1;
+		$stop_on_hover_top_rated_slider = isset( $settings['stop_on_hover_top_rated_slider'] ) ? $settings['stop_on_hover_top_rated_slider'] : 1;
+		$stop_on_hover_now_playing_slider = isset( $settings['stop_on_hover_now_playing_slider'] ) ? $settings['stop_on_hover_now_playing_slider'] : 1;
+		$stop_on_hover_sports_slider = isset( $settings['stop_on_hover_sports_slider'] ) ? $settings['stop_on_hover_sports_slider'] : 1;
 
 		// Test API connection
 		$api_status = $this->test_api_connection();
@@ -291,6 +364,16 @@ class TMDB_Slider_Admin {
 									<input type="checkbox" name="tmdb_slider_settings[enable_hero_slider]" value="1" <?php checked( $enable_hero_slider, 1 ); ?> />
 									<?php esc_html_e( 'Enable [tmdb_hero_slider] shortcode', 'tmdb-slider' ); ?>
 								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[reverse_hero_slider]" value="1" <?php checked( $reverse_hero_slider, 1 ); ?> />
+									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_hero_slider]" value="1" <?php checked( $stop_on_hover_hero_slider, 1 ); ?> />
+									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
+								</label>
 							</td>
 						</tr>
 						<tr>
@@ -299,6 +382,16 @@ class TMDB_Slider_Admin {
 								<label>
 									<input type="checkbox" name="tmdb_slider_settings[enable_popular_slider]" value="1" <?php checked( $enable_popular_slider, 1 ); ?> />
 									<?php esc_html_e( 'Enable [tmdb_popular_slider] shortcode', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[reverse_popular_slider]" value="1" <?php checked( $reverse_popular_slider, 1 ); ?> />
+									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_popular_slider]" value="1" <?php checked( $stop_on_hover_popular_slider, 1 ); ?> />
+									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
 								</label>
 							</td>
 						</tr>
@@ -309,6 +402,16 @@ class TMDB_Slider_Admin {
 									<input type="checkbox" name="tmdb_slider_settings[enable_top_rated_slider]" value="1" <?php checked( $enable_top_rated_slider, 1 ); ?> />
 									<?php esc_html_e( 'Enable [tmdb_top_rated_slider] shortcode', 'tmdb-slider' ); ?>
 								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[reverse_top_rated_slider]" value="1" <?php checked( $reverse_top_rated_slider, 1 ); ?> />
+									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_top_rated_slider]" value="1" <?php checked( $stop_on_hover_top_rated_slider, 1 ); ?> />
+									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
+								</label>
 							</td>
 						</tr>
 						<tr>
@@ -318,6 +421,16 @@ class TMDB_Slider_Admin {
 									<input type="checkbox" name="tmdb_slider_settings[enable_now_playing_slider]" value="1" <?php checked( $enable_now_playing_slider, 1 ); ?> />
 									<?php esc_html_e( 'Enable [tmdb_now_playing_slider] shortcode', 'tmdb-slider' ); ?>
 								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[reverse_now_playing_slider]" value="1" <?php checked( $reverse_now_playing_slider, 1 ); ?> />
+									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_now_playing_slider]" value="1" <?php checked( $stop_on_hover_now_playing_slider, 1 ); ?> />
+									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
+								</label>
 							</td>
 						</tr>
 						<tr>
@@ -326,6 +439,16 @@ class TMDB_Slider_Admin {
 								<label>
 									<input type="checkbox" name="tmdb_slider_settings[enable_sports_slider]" value="1" <?php checked( $enable_sports_slider, 1 ); ?> />
 									<?php esc_html_e( 'Enable [tmdb_sports_slider] shortcode', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[reverse_sports_slider]" value="1" <?php checked( $reverse_sports_slider, 1 ); ?> />
+									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
+								</label>
+								<br />
+								<label style="margin-top: 10px; display: inline-block;">
+									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_sports_slider]" value="1" <?php checked( $stop_on_hover_sports_slider, 1 ); ?> />
+									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
 								</label>
 							</td>
 						</tr>
@@ -590,6 +713,22 @@ class TMDB_Slider_Admin {
 		}
 
 		return TMDB_Slider_API::test_connection();
+	}
+
+	/**
+	 * Add action links to plugin row
+	 *
+	 * @param array $links Existing action links.
+	 * @return array Modified action links.
+	 */
+	public function add_action_links( $links ) {
+		$settings_link = sprintf(
+			'<a href="%s">%s</a>',
+			admin_url( 'options-general.php?page=tmdb-slider' ),
+			__( 'Settings', 'tmdb-slider' )
+		);
+		array_unshift( $links, $settings_link );
+		return $links;
 	}
 }
 
