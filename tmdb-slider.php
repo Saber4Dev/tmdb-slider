@@ -3,7 +3,7 @@
  * Plugin Name: TMDB Slider
  * Plugin URI: https://github.com/Saber4Dev/tmdb-slider
  * Description: A WordPress plugin that integrates with The Movie Database (TMDb) API and provides multiple Elementor-friendly sliders using shortcodes.
- * Version: 1.0.1
+ * Version: 1.1.1
  * Author: Ranber
  * Author URI: https://Ranber.com
  * Text Domain: tmdb-slider

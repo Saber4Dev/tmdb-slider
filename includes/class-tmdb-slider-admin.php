@@ -76,40 +76,6 @@ class TMDB_Slider_Admin {
 			$sanitized['poster_width'] = absint( $input['poster_width'] );
 		}
 
-		if ( isset( $input['enable_hero_slider'] ) ) {
-			$sanitized['enable_hero_slider'] = 1;
-		} else {
-			$sanitized['enable_hero_slider'] = 0;
-		}
-
-		if ( isset( $input['enable_popular_slider'] ) ) {
-			$sanitized['enable_popular_slider'] = 1;
-		} else {
-			$sanitized['enable_popular_slider'] = 0;
-		}
-
-		if ( isset( $input['enable_top_rated_slider'] ) ) {
-			$sanitized['enable_top_rated_slider'] = 1;
-		} else {
-			$sanitized['enable_top_rated_slider'] = 0;
-		}
-
-		if ( isset( $input['enable_now_playing_slider'] ) ) {
-			$sanitized['enable_now_playing_slider'] = 1;
-		} else {
-			$sanitized['enable_now_playing_slider'] = 0;
-		}
-
-		if ( isset( $input['enable_sports_slider'] ) ) {
-			$sanitized['enable_sports_slider'] = 1;
-		} else {
-			$sanitized['enable_sports_slider'] = 0;
-		}
-
-		if ( isset( $input['sports_keywords'] ) ) {
-			$sanitized['sports_keywords'] = sanitize_text_field( $input['sports_keywords'] );
-		}
-
 		if ( isset( $input['show_play_icon'] ) ) {
 			$sanitized['show_play_icon'] = 1;
 		} else {
@@ -126,6 +92,62 @@ class TMDB_Slider_Admin {
 			$sanitized['show_names'] = 1;
 		} else {
 			$sanitized['show_names'] = 0;
+		}
+
+		if ( isset( $input['name_color'] ) ) {
+			$sanitized['name_color'] = sanitize_hex_color( $input['name_color'] );
+		}
+
+		if ( isset( $input['name_padding'] ) ) {
+			$sanitized['name_padding'] = sanitize_text_field( $input['name_padding'] );
+		}
+
+		if ( isset( $input['name_margin'] ) ) {
+			$sanitized['name_margin'] = sanitize_text_field( $input['name_margin'] );
+		}
+
+		if ( isset( $input['name_text_align'] ) ) {
+			$align = sanitize_text_field( $input['name_text_align'] );
+			if ( in_array( $align, array( 'left', 'center', 'right' ), true ) ) {
+				$sanitized['name_text_align'] = $align;
+			}
+		}
+
+		if ( isset( $input['name_font_size'] ) ) {
+			$sanitized['name_font_size'] = sanitize_text_field( $input['name_font_size'] );
+		}
+
+		if ( isset( $input['poster_gap'] ) ) {
+			$sanitized['poster_gap'] = absint( $input['poster_gap'] );
+		}
+
+		// Background settings
+		if ( isset( $input['bg_position'] ) ) {
+			$position = sanitize_text_field( $input['bg_position'] );
+			if ( in_array( $position, array( 'center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right' ), true ) ) {
+				$sanitized['bg_position'] = $position;
+			}
+		}
+
+		if ( isset( $input['bg_size'] ) ) {
+			$size = sanitize_text_field( $input['bg_size'] );
+			if ( in_array( $size, array( 'cover', 'contain', 'auto', '100% 100%' ), true ) ) {
+				$sanitized['bg_size'] = $size;
+			}
+		}
+
+		if ( isset( $input['bg_overlay'] ) ) {
+			$sanitized['bg_overlay'] = absint( $input['bg_overlay'] );
+		} else {
+			$sanitized['bg_overlay'] = 0;
+		}
+
+		if ( isset( $input['bg_overlay_color'] ) ) {
+			$sanitized['bg_overlay_color'] = sanitize_hex_color( $input['bg_overlay_color'] );
+		}
+
+		if ( isset( $input['bg_change_interval'] ) ) {
+			$sanitized['bg_change_interval'] = absint( $input['bg_change_interval'] );
 		}
 
 		if ( isset( $input['make_poster_clickable'] ) ) {
@@ -159,12 +181,6 @@ class TMDB_Slider_Admin {
 			$sanitized['reverse_now_playing_slider'] = 0;
 		}
 
-		if ( isset( $input['reverse_sports_slider'] ) ) {
-			$sanitized['reverse_sports_slider'] = 1;
-		} else {
-			$sanitized['reverse_sports_slider'] = 0;
-		}
-
 		// Stop on hover options
 		if ( isset( $input['stop_on_hover_hero_slider'] ) ) {
 			$sanitized['stop_on_hover_hero_slider'] = 1;
@@ -190,12 +206,6 @@ class TMDB_Slider_Admin {
 			$sanitized['stop_on_hover_now_playing_slider'] = 0;
 		}
 
-		if ( isset( $input['stop_on_hover_sports_slider'] ) ) {
-			$sanitized['stop_on_hover_sports_slider'] = 1;
-		} else {
-			$sanitized['stop_on_hover_sports_slider'] = 0;
-		}
-
 		return $sanitized;
 	}
 
@@ -212,26 +222,21 @@ class TMDB_Slider_Admin {
 		$row_slider_speed = isset( $settings['row_slider_speed'] ) ? $settings['row_slider_speed'] : 60;
 		$hero_slider_speed = isset( $settings['hero_slider_speed'] ) ? $settings['hero_slider_speed'] : 50;
 		$poster_width = isset( $settings['poster_width'] ) ? $settings['poster_width'] : 220;
-		$enable_hero_slider = isset( $settings['enable_hero_slider'] ) ? $settings['enable_hero_slider'] : 1;
-		$enable_popular_slider = isset( $settings['enable_popular_slider'] ) ? $settings['enable_popular_slider'] : 1;
-		$enable_top_rated_slider = isset( $settings['enable_top_rated_slider'] ) ? $settings['enable_top_rated_slider'] : 1;
-		$enable_now_playing_slider = isset( $settings['enable_now_playing_slider'] ) ? $settings['enable_now_playing_slider'] : 1;
-		$enable_sports_slider = isset( $settings['enable_sports_slider'] ) ? $settings['enable_sports_slider'] : 1;
-		$sports_keywords = isset( $settings['sports_keywords'] ) ? $settings['sports_keywords'] : '';
 		$show_play_icon = isset( $settings['show_play_icon'] ) ? $settings['show_play_icon'] : 1;
 		$show_rating = isset( $settings['show_rating'] ) ? $settings['show_rating'] : 1;
 		$show_names = isset( $settings['show_names'] ) ? $settings['show_names'] : 1;
+		$name_color = isset( $settings['name_color'] ) ? $settings['name_color'] : '#333333';
+		$name_padding = isset( $settings['name_padding'] ) ? $settings['name_padding'] : '0';
+		$name_margin = isset( $settings['name_margin'] ) ? $settings['name_margin'] : '10px 0 0 0';
+		$name_text_align = isset( $settings['name_text_align'] ) ? $settings['name_text_align'] : 'center';
+		$name_font_size = isset( $settings['name_font_size'] ) ? $settings['name_font_size'] : '14px';
+		$poster_gap = isset( $settings['poster_gap'] ) ? $settings['poster_gap'] : 15;
 		$make_poster_clickable = isset( $settings['make_poster_clickable'] ) ? $settings['make_poster_clickable'] : 1;
-		$reverse_hero_slider = isset( $settings['reverse_hero_slider'] ) ? $settings['reverse_hero_slider'] : 0;
-		$reverse_popular_slider = isset( $settings['reverse_popular_slider'] ) ? $settings['reverse_popular_slider'] : 0;
-		$reverse_top_rated_slider = isset( $settings['reverse_top_rated_slider'] ) ? $settings['reverse_top_rated_slider'] : 0;
-		$reverse_now_playing_slider = isset( $settings['reverse_now_playing_slider'] ) ? $settings['reverse_now_playing_slider'] : 0;
-		$reverse_sports_slider = isset( $settings['reverse_sports_slider'] ) ? $settings['reverse_sports_slider'] : 0;
-		$stop_on_hover_hero_slider = isset( $settings['stop_on_hover_hero_slider'] ) ? $settings['stop_on_hover_hero_slider'] : 1;
-		$stop_on_hover_popular_slider = isset( $settings['stop_on_hover_popular_slider'] ) ? $settings['stop_on_hover_popular_slider'] : 1;
-		$stop_on_hover_top_rated_slider = isset( $settings['stop_on_hover_top_rated_slider'] ) ? $settings['stop_on_hover_top_rated_slider'] : 1;
-		$stop_on_hover_now_playing_slider = isset( $settings['stop_on_hover_now_playing_slider'] ) ? $settings['stop_on_hover_now_playing_slider'] : 1;
-		$stop_on_hover_sports_slider = isset( $settings['stop_on_hover_sports_slider'] ) ? $settings['stop_on_hover_sports_slider'] : 1;
+		$bg_position = isset( $settings['bg_position'] ) ? $settings['bg_position'] : 'center';
+		$bg_size = isset( $settings['bg_size'] ) ? $settings['bg_size'] : 'cover';
+		$bg_overlay = isset( $settings['bg_overlay'] ) ? $settings['bg_overlay'] : 0;
+		$bg_overlay_color = isset( $settings['bg_overlay_color'] ) ? $settings['bg_overlay_color'] : '#000000';
+		$bg_change_interval = isset( $settings['bg_change_interval'] ) ? $settings['bg_change_interval'] : 5;
 
 		// Test API connection
 		$api_status = $this->test_api_connection();
@@ -248,7 +253,7 @@ class TMDB_Slider_Admin {
 				<h2 class="nav-tab-wrapper">
 					<a href="#api-settings" class="nav-tab nav-tab-active"><?php esc_html_e( 'API Settings', 'tmdb-slider' ); ?></a>
 					<a href="#slider-settings" class="nav-tab"><?php esc_html_e( 'Slider Settings', 'tmdb-slider' ); ?></a>
-					<a href="#shortcodes" class="nav-tab"><?php esc_html_e( 'Shortcodes Reference', 'tmdb-slider' ); ?></a>
+					<a href="#shortcodes" class="nav-tab"><?php esc_html_e( 'Help', 'tmdb-slider' ); ?></a>
 				</h2>
 
 				<div id="api-settings" class="tab-content">
@@ -342,6 +347,46 @@ class TMDB_Slider_Admin {
 									<input type="checkbox" name="tmdb_slider_settings[show_names]" value="1" <?php checked( $show_names, 1 ); ?> />
 									<?php esc_html_e( 'Show movie/TV show names under posters', 'tmdb-slider' ); ?>
 								</label>
+								<br />
+								<div style="margin-top: 15px;">
+									<label for="name_color" style="display: inline-block; margin-right: 15px;">
+										<?php esc_html_e( 'Text Color:', 'tmdb-slider' ); ?>
+										<input type="color" id="name_color" name="tmdb_slider_settings[name_color]" value="<?php echo esc_attr( $name_color ); ?>" style="margin-left: 5px;" />
+									</label>
+									<label for="name_font_size" style="display: inline-block; margin-right: 15px;">
+										<?php esc_html_e( 'Font Size:', 'tmdb-slider' ); ?>
+										<input type="text" id="name_font_size" name="tmdb_slider_settings[name_font_size]" value="<?php echo esc_attr( $name_font_size ); ?>" style="width: 80px; margin-left: 5px;" placeholder="14px" />
+									</label>
+									<label for="name_text_align" style="display: inline-block;">
+										<?php esc_html_e( 'Text Align:', 'tmdb-slider' ); ?>
+										<select id="name_text_align" name="tmdb_slider_settings[name_text_align]" style="margin-left: 5px;">
+											<option value="left" <?php selected( $name_text_align, 'left' ); ?>><?php esc_html_e( 'Left', 'tmdb-slider' ); ?></option>
+											<option value="center" <?php selected( $name_text_align, 'center' ); ?>><?php esc_html_e( 'Center', 'tmdb-slider' ); ?></option>
+											<option value="right" <?php selected( $name_text_align, 'right' ); ?>><?php esc_html_e( 'Right', 'tmdb-slider' ); ?></option>
+										</select>
+									</label>
+								</div>
+								<div style="margin-top: 10px;">
+									<label for="name_padding" style="display: inline-block; margin-right: 15px;">
+										<?php esc_html_e( 'Padding:', 'tmdb-slider' ); ?>
+										<input type="text" id="name_padding" name="tmdb_slider_settings[name_padding]" value="<?php echo esc_attr( $name_padding ); ?>" style="width: 100px; margin-left: 5px;" placeholder="0" />
+										<span class="description" style="margin-left: 5px;"><?php esc_html_e( 'e.g., 5px or 5px 10px', 'tmdb-slider' ); ?></span>
+									</label>
+									<label for="name_margin" style="display: inline-block;">
+										<?php esc_html_e( 'Margin:', 'tmdb-slider' ); ?>
+										<input type="text" id="name_margin" name="tmdb_slider_settings[name_margin]" value="<?php echo esc_attr( $name_margin ); ?>" style="width: 100px; margin-left: 5px;" placeholder="10px 0 0 0" />
+										<span class="description" style="margin-left: 5px;"><?php esc_html_e( 'e.g., 10px 0 0 0', 'tmdb-slider' ); ?></span>
+									</label>
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="poster_gap"><?php esc_html_e( 'Poster Gap (px)', 'tmdb-slider' ); ?></label>
+							</th>
+							<td>
+								<input type="number" id="poster_gap" name="tmdb_slider_settings[poster_gap]" value="<?php echo esc_attr( $poster_gap ); ?>" min="0" step="1" />
+								<p class="description"><?php esc_html_e( 'Gap between posters in row sliders (in pixels).', 'tmdb-slider' ); ?></p>
 							</td>
 						</tr>
 						<tr>
@@ -355,328 +400,196 @@ class TMDB_Slider_Admin {
 						</tr>
 					</table>
 
-					<h3><?php esc_html_e( 'Enable/Disable Sliders', 'tmdb-slider' ); ?></h3>
-					<table class="form-table" role="presentation">
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Hero Slider', 'tmdb-slider' ); ?></th>
-							<td>
-								<label>
-									<input type="checkbox" name="tmdb_slider_settings[enable_hero_slider]" value="1" <?php checked( $enable_hero_slider, 1 ); ?> />
-									<?php esc_html_e( 'Enable [tmdb_hero_slider] shortcode', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[reverse_hero_slider]" value="1" <?php checked( $reverse_hero_slider, 1 ); ?> />
-									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_hero_slider]" value="1" <?php checked( $stop_on_hover_hero_slider, 1 ); ?> />
-									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
-								</label>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Popular Slider', 'tmdb-slider' ); ?></th>
-							<td>
-								<label>
-									<input type="checkbox" name="tmdb_slider_settings[enable_popular_slider]" value="1" <?php checked( $enable_popular_slider, 1 ); ?> />
-									<?php esc_html_e( 'Enable [tmdb_popular_slider] shortcode', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[reverse_popular_slider]" value="1" <?php checked( $reverse_popular_slider, 1 ); ?> />
-									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_popular_slider]" value="1" <?php checked( $stop_on_hover_popular_slider, 1 ); ?> />
-									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
-								</label>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Top Rated Slider', 'tmdb-slider' ); ?></th>
-							<td>
-								<label>
-									<input type="checkbox" name="tmdb_slider_settings[enable_top_rated_slider]" value="1" <?php checked( $enable_top_rated_slider, 1 ); ?> />
-									<?php esc_html_e( 'Enable [tmdb_top_rated_slider] shortcode', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[reverse_top_rated_slider]" value="1" <?php checked( $reverse_top_rated_slider, 1 ); ?> />
-									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_top_rated_slider]" value="1" <?php checked( $stop_on_hover_top_rated_slider, 1 ); ?> />
-									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
-								</label>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Now Playing Slider', 'tmdb-slider' ); ?></th>
-							<td>
-								<label>
-									<input type="checkbox" name="tmdb_slider_settings[enable_now_playing_slider]" value="1" <?php checked( $enable_now_playing_slider, 1 ); ?> />
-									<?php esc_html_e( 'Enable [tmdb_now_playing_slider] shortcode', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[reverse_now_playing_slider]" value="1" <?php checked( $reverse_now_playing_slider, 1 ); ?> />
-									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_now_playing_slider]" value="1" <?php checked( $stop_on_hover_now_playing_slider, 1 ); ?> />
-									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
-								</label>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Sports Slider', 'tmdb-slider' ); ?></th>
-							<td>
-								<label>
-									<input type="checkbox" name="tmdb_slider_settings[enable_sports_slider]" value="1" <?php checked( $enable_sports_slider, 1 ); ?> />
-									<?php esc_html_e( 'Enable [tmdb_sports_slider] shortcode', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[reverse_sports_slider]" value="1" <?php checked( $reverse_sports_slider, 1 ); ?> />
-									<?php esc_html_e( 'Reverse direction', 'tmdb-slider' ); ?>
-								</label>
-								<br />
-								<label style="margin-top: 10px; display: inline-block;">
-									<input type="checkbox" name="tmdb_slider_settings[stop_on_hover_sports_slider]" value="1" <?php checked( $stop_on_hover_sports_slider, 1 ); ?> />
-									<?php esc_html_e( 'Stop on hover', 'tmdb-slider' ); ?>
-								</label>
-							</td>
-						</tr>
-					</table>
-
-					<h3><?php esc_html_e( 'Sports Slider Configuration', 'tmdb-slider' ); ?></h3>
-					<table class="form-table" role="presentation">
-						<tr>
-							<th scope="row">
-								<label for="sports_keywords"><?php esc_html_e( 'Sports Keyword IDs (TMDb)', 'tmdb-slider' ); ?></label>
-							</th>
-							<td>
-								<input type="text" id="sports_keywords" name="tmdb_slider_settings[sports_keywords]" value="<?php echo esc_attr( $sports_keywords ); ?>" class="regular-text" />
-								<p class="description">
-									<?php esc_html_e( 'Comma-separated TMDb keyword IDs used by the sports slider (e.g., football, soccer, sports). You can find keyword IDs on TMDb by searching for keywords.', 'tmdb-slider' ); ?>
-								</p>
-							</td>
-						</tr>
-					</table>
 				</div>
 
 				<div id="shortcodes" class="tab-content" style="display:none;">
-					<h3><?php esc_html_e( 'Available Shortcodes', 'tmdb-slider' ); ?></h3>
+					<h3><?php esc_html_e( 'How to Use TMDB Slider', 'tmdb-slider' ); ?></h3>
 					
-					<h4><?php esc_html_e( 'Global Shortcodes (Movies & TV Shows)', 'tmdb-slider' ); ?></h4>
+					<h4><?php esc_html_e( '🎬 Dynamic Background Feature', 'tmdb-slider' ); ?></h4>
+					<p><?php esc_html_e( 'Automatically apply TMDb movie/TV backgrounds to any div by adding a specific ID. The backgrounds will cycle through automatically!', 'tmdb-slider' ); ?></p>
+					
+					<p><strong><?php esc_html_e( 'Step 1:', 'tmdb-slider' ); ?></strong> <?php esc_html_e( 'Choose a background ID from the list below:', 'tmdb-slider' ); ?></p>
+					<table class="wp-list-table widefat fixed striped" style="margin-bottom: 20px;">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Background ID', 'tmdb-slider' ); ?></th>
+								<th><?php esc_html_e( 'Content Type', 'tmdb-slider' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>#tmdb--popular-movie-background</code></td>
+								<td><?php esc_html_e( 'Popular movies', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--popular-tv-background</code></td>
+								<td><?php esc_html_e( 'Popular TV shows', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--trending-movie-background</code></td>
+								<td><?php esc_html_e( 'Trending movies', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--trending-tv-background</code></td>
+								<td><?php esc_html_e( 'Trending TV shows', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--top-rated-movie-background</code></td>
+								<td><?php esc_html_e( 'Top rated movies', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--top-rated-tv-background</code></td>
+								<td><?php esc_html_e( 'Top rated TV shows', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--now-playing-movie-background</code></td>
+								<td><?php esc_html_e( 'Now playing movies', 'tmdb-slider' ); ?></td>
+							</tr>
+							<tr>
+								<td><code>#tmdb--on-air-tv-background</code></td>
+								<td><?php esc_html_e( 'On air TV shows', 'tmdb-slider' ); ?></td>
+							</tr>
+						</tbody>
+					</table>
+					
+					<p><strong><?php esc_html_e( 'Step 2:', 'tmdb-slider' ); ?></strong> <?php esc_html_e( 'Add the ID to your div element:', 'tmdb-slider' ); ?></p>
+					<pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; border-left: 4px solid #0073aa;"><code>&lt;div id="tmdb--popular-movie-background" style="width: 100%; height: 400px; padding: 20px;"&gt;
+    &lt;h2 style="position: relative; z-index: 2; color: white;"&gt;Your Content Here&lt;/h2&gt;
+&lt;/div&gt;</code></pre>
+					
+					<p><strong><?php esc_html_e( 'That\'s it!', 'tmdb-slider' ); ?></strong> <?php esc_html_e( 'The plugin will automatically fetch and apply TMDb backgrounds that cycle through. Configure background settings (position, size, overlay) in the Slider Settings tab above.', 'tmdb-slider' ); ?></p>
+					
+					<hr style="margin: 30px 0;" />
+					
+					<h4><?php esc_html_e( '📝 Shortcodes', 'tmdb-slider' ); ?></h4>
+					<p><?php esc_html_e( 'Use shortcodes to display sliders anywhere on your site. All shortcodes support flexible attributes:', 'tmdb-slider' ); ?></p>
+					<ul style="list-style: disc; margin-left: 20px;">
+						<li><code>type=movie</code> <?php esc_html_e( 'or', 'tmdb-slider' ); ?> <code>type=tv</code> - <?php esc_html_e( 'Filter by content type', 'tmdb-slider' ); ?></li>
+						<li><code>reverse=on</code> <?php esc_html_e( 'or', 'tmdb-slider' ); ?> <code>reverse=off</code> - <?php esc_html_e( 'Control animation direction', 'tmdb-slider' ); ?></li>
+						<li><code>stop_on_hover=on</code> <?php esc_html_e( 'or', 'tmdb-slider' ); ?> <code>stop_on_hover=off</code> - <?php esc_html_e( 'Control pause on hover', 'tmdb-slider' ); ?></li>
+						<li><code>speed=50</code> - <?php esc_html_e( 'Override animation speed (seconds)', 'tmdb-slider' ); ?></li>
+						<li><code>poster_width=220</code> - <?php esc_html_e( 'Override poster width for row sliders (pixels)', 'tmdb-slider' ); ?></li>
+					</ul>
+					
+					<p><strong><?php esc_html_e( 'Shortcode Examples:', 'tmdb-slider' ); ?></strong></p>
+					<div style="background: #f9f9f9; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+						<p><strong><?php esc_html_e( 'Basic Usage:', 'tmdb-slider' ); ?></strong></p>
+						<ul style="list-style: disc; margin-left: 20px; margin-bottom: 15px;">
+							<li><code>[tmdb_hero_slider]</code> - <?php esc_html_e( 'Default hero slider with trending movies', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_popular_slider]</code> - <?php esc_html_e( 'Popular movies row slider', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_top_rated_slider]</code> - <?php esc_html_e( 'Top rated movies row slider', 'tmdb-slider' ); ?></li>
+						</ul>
+						
+						<p><strong><?php esc_html_e( 'With Type Filter:', 'tmdb-slider' ); ?></strong></p>
+						<ul style="list-style: disc; margin-left: 20px; margin-bottom: 15px;">
+							<li><code>[tmdb_hero_slider type=movie]</code> - <?php esc_html_e( 'Movies only', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_hero_slider type=tv]</code> - <?php esc_html_e( 'TV shows only', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_popular_slider type=tv]</code> - <?php esc_html_e( 'Popular TV shows', 'tmdb-slider' ); ?></li>
+						</ul>
+						
+						<p><strong><?php esc_html_e( 'With Animation Control:', 'tmdb-slider' ); ?></strong></p>
+						<ul style="list-style: disc; margin-left: 20px; margin-bottom: 15px;">
+							<li><code>[tmdb_hero_slider reverse=on]</code> - <?php esc_html_e( 'Reverse animation direction', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_popular_slider reverse=on stop_on_hover=off]</code> - <?php esc_html_e( 'Reverse + no pause on hover', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_hero_slider speed=40]</code> - <?php esc_html_e( 'Custom animation speed (40 seconds)', 'tmdb-slider' ); ?></li>
+						</ul>
+						
+						<p><strong><?php esc_html_e( 'Advanced Examples:', 'tmdb-slider' ); ?></strong></p>
+						<ul style="list-style: disc; margin-left: 20px;">
+							<li><code>[tmdb_hero_slider type=movie reverse=on]</code> - <?php esc_html_e( 'Movies with reverse direction', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_popular_slider type=tv speed=40]</code> - <?php esc_html_e( 'TV shows with custom speed', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_top_rated_slider type=movie reverse=on poster_width=250]</code> - <?php esc_html_e( 'Movies, reverse, custom poster width', 'tmdb-slider' ); ?></li>
+							<li><code>[tmdb_now_playing_slider type=tv reverse=on speed=30]</code> - <?php esc_html_e( 'TV shows, reverse, fast speed', 'tmdb-slider' ); ?></li>
+						</ul>
+					</div>
+					
+					<p><strong><?php esc_html_e( 'Where to Use:', 'tmdb-slider' ); ?></strong></p>
+					<ul style="list-style: disc; margin-left: 20px;">
+						<li><?php esc_html_e( 'In Posts/Pages: Just paste the shortcode directly', 'tmdb-slider' ); ?></li>
+						<li><?php esc_html_e( 'In Elementor: Add a Shortcode widget and paste the shortcode', 'tmdb-slider' ); ?></li>
+						<li><?php esc_html_e( 'In PHP Templates: Use', 'tmdb-slider' ); ?> <code>&lt;?php echo do_shortcode('[tmdb_hero_slider]'); ?&gt;</code></li>
+					</ul>
+					
+					<h4><?php esc_html_e( 'Main Shortcodes', 'tmdb-slider' ); ?></h4>
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
 								<th><?php esc_html_e( 'Shortcode', 'tmdb-slider' ); ?></th>
 								<th><?php esc_html_e( 'Description', 'tmdb-slider' ); ?></th>
-								<th><?php esc_html_e( 'Status', 'tmdb-slider' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
 								<td><code>[tmdb_hero_slider]</code></td>
-								<td><?php esc_html_e( 'Backdrop hero slider (trending movies)', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_hero_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
+								<td><?php esc_html_e( 'Backdrop hero slider (trending content)', 'tmdb-slider' ); ?></td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_popular_slider]</code></td>
-								<td><?php esc_html_e( 'Popular movies row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_popular_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
+								<td><?php esc_html_e( 'Popular content row', 'tmdb-slider' ); ?></td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_top_rated_slider]</code></td>
-								<td><?php esc_html_e( 'Top rated movies row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_top_rated_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
+								<td><?php esc_html_e( 'Top rated content row', 'tmdb-slider' ); ?></td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_now_playing_slider]</code></td>
-								<td><?php esc_html_e( 'Now playing movies row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_now_playing_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
-							</tr>
-							<tr>
-								<td><code>[tmdb_sports_slider]</code></td>
-								<td><?php esc_html_e( 'Sports TV row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_sports_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
+								<td><?php esc_html_e( 'Now playing/on air content row', 'tmdb-slider' ); ?></td>
 							</tr>
 						</tbody>
 					</table>
 
-					<h4><?php esc_html_e( 'Movie-Specific Shortcodes', 'tmdb-slider' ); ?></h4>
+					<h4><?php esc_html_e( 'Movie-Specific Shortcodes (Backward Compatibility)', 'tmdb-slider' ); ?></h4>
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
 								<th><?php esc_html_e( 'Shortcode', 'tmdb-slider' ); ?></th>
 								<th><?php esc_html_e( 'Description', 'tmdb-slider' ); ?></th>
-								<th><?php esc_html_e( 'Status', 'tmdb-slider' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
 								<td><code>[tmdb_movie_hero_slider]</code></td>
 								<td><?php esc_html_e( 'Movie hero slider (trending movies)', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_hero_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_movie_popular_slider]</code></td>
 								<td><?php esc_html_e( 'Popular movies row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_popular_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_movie_top_rated_slider]</code></td>
 								<td><?php esc_html_e( 'Top rated movies row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_top_rated_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_movie_now_playing_slider]</code></td>
 								<td><?php esc_html_e( 'Now playing movies row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_now_playing_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 						</tbody>
 					</table>
 
-					<h4><?php esc_html_e( 'TV Show-Specific Shortcodes', 'tmdb-slider' ); ?></h4>
+					<h4><?php esc_html_e( 'TV Show-Specific Shortcodes (Backward Compatibility)', 'tmdb-slider' ); ?></h4>
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
 								<th><?php esc_html_e( 'Shortcode', 'tmdb-slider' ); ?></th>
 								<th><?php esc_html_e( 'Description', 'tmdb-slider' ); ?></th>
-								<th><?php esc_html_e( 'Status', 'tmdb-slider' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
 								<td><code>[tmdb_tv_hero_slider]</code></td>
 								<td><?php esc_html_e( 'TV show hero slider (trending TV shows)', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_hero_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_tv_popular_slider]</code></td>
 								<td><?php esc_html_e( 'Popular TV shows row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_popular_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_tv_top_rated_slider]</code></td>
 								<td><?php esc_html_e( 'Top rated TV shows row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_top_rated_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 							<tr>
 								<td><code>[tmdb_tv_on_air_slider]</code></td>
 								<td><?php esc_html_e( 'On air TV shows row', 'tmdb-slider' ); ?></td>
-								<td>
-									<?php
-									if ( $enable_now_playing_slider ) {
-										echo '<span style="color: green;">' . esc_html__( 'Enabled', 'tmdb-slider' ) . '</span>';
-									} else {
-										echo '<span style="color: red;">' . esc_html__( 'Disabled', 'tmdb-slider' ) . '</span>';
-									}
-									?>
-								</td>
 							</tr>
 						</tbody>
 					</table>

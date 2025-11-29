@@ -1,6 +1,6 @@
 # TMDB Slider
 
-A powerful WordPress plugin that integrates with The Movie Database (TMDb) API to display beautiful, customizable sliders for movies and TV shows. Perfect for entertainment websites, movie blogs, and streaming platforms.
+A WordPress plugin that integrates with The Movie Database (TMDb) API to display beautiful, customizable sliders for movies and TV shows.
 
 ![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)
@@ -9,158 +9,154 @@ A powerful WordPress plugin that integrates with The Movie Database (TMDb) API t
 
 ## 🎬 Features
 
-### Multiple Slider Types
-- **Hero Slider**: Full-width backdrop slider for trending content
-- **Row Sliders**: Horizontal scrolling poster galleries
-- **Sports Slider**: Customizable sports TV shows slider
-
-### Content Categories
-- **Movies**: Popular, Top Rated, Now Playing, Trending
-- **TV Shows**: Popular, Top Rated, On Air, Trending
-- **Sports**: Custom keyword-based TV shows
-
-### Customization Options
-- ✅ **Reverse Direction**: Control slider animation direction for each slider
-- ✅ **Stop on Hover**: Toggle pause-on-hover functionality per slider
-- ✅ **Speed Control**: Adjustable animation speed for hero and row sliders
-- ✅ **Poster Width**: Customizable poster image width
-- ✅ **Display Options**: Show/hide play icons, ratings, and titles
-- ✅ **Clickable Posters**: Enable/disable links to TMDb pages
-
-### Developer-Friendly
-- 🚀 **Shortcode-Based**: Easy to use shortcodes for all sliders
-- 🎨 **Elementor Compatible**: Works seamlessly with Elementor page builder
-- 🔄 **Auto-Updates**: Automatic updates from GitHub releases
-- ⚡ **Performance Optimized**: Built-in caching for API responses
-- 📱 **Responsive Design**: Mobile-friendly sliders
+- **Hero & Row Sliders**: Full-width backdrop sliders and horizontal poster galleries
+- **Dynamic Backgrounds**: Auto-apply TMDb backgrounds to divs with specific IDs
+- **Content Types**: Movies and TV shows (Popular, Top Rated, Now Playing, Trending)
+- **Flexible Shortcodes**: Smart attributes for easy customization
+- **Advanced Styling**: Control colors, fonts, spacing, alignment for poster names
+- **Animation Control**: Reverse direction, speed control, pause on hover
+- **Elementor Compatible**: Works seamlessly with Elementor page builder
+- **Auto-Updates**: Automatic updates from GitHub releases
+- **Responsive Design**: Mobile-friendly sliders
 
 ## 📋 Requirements
 
-- WordPress 5.0 or higher
-- PHP 7.2 or higher
-- TMDb API Key (free at [themoviedb.org](https://www.themoviedb.org/settings/api))
+- WordPress 5.0+
+- PHP 7.2+
+- TMDb API Key ([Get it free](https://www.themoviedb.org/settings/api))
 
 ## 🚀 Installation
 
-### Method 1: Manual Installation
-
-1. Download the latest release from the [Releases](https://github.com/Saber4Dev/tmdb-slider/releases) page
-2. Upload the `tmdb-slider` folder to `/wp-content/plugins/` directory
-3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Go to **Settings > TMDB Slider** to configure your API key
-
-### Method 2: Git Clone
-
-```bash
-cd wp-content/plugins
-git clone https://github.com/Saber4Dev/tmdb-slider.git
-```
-
-Then activate the plugin through the WordPress admin panel.
+1. Download from [Releases](https://github.com/Saber4Dev/tmdb-slider/releases) or clone:
+   ```bash
+   git clone https://github.com/Saber4Dev/tmdb-slider.git
+   ```
+2. Upload to `/wp-content/plugins/`
+3. Activate in WordPress admin
+4. Configure API key at **Settings > TMDB Slider**
 
 ## ⚙️ Configuration
 
-### Getting Your TMDb API Key
+### API Setup
+1. Get your free API key from [themoviedb.org](https://www.themoviedb.org/settings/api)
+2. Paste it in **Settings > TMDB Slider**
 
-1. Visit [The Movie Database](https://www.themoviedb.org/)
-2. Create a free account
-3. Go to [API Settings](https://www.themoviedb.org/settings/api)
-4. Request an API key
-5. Copy your API key and paste it in **Settings > TMDB Slider**
-
-### Plugin Settings
-
-Navigate to **Settings > TMDB Slider** to configure:
-
-#### API Settings
-- **TMDb API Key**: Your API key from themoviedb.org
-- **Connection Status**: Verify your API connection
-
-#### Global Slider Settings
-- **Row Slider Speed**: Animation duration in seconds (default: 60)
-- **Hero Slider Speed**: Animation duration in seconds (default: 50)
-- **Poster Width**: Width of poster images in pixels (default: 220)
-
-#### Display Options
-- **Show Play Icon**: Display play icon on posters and hero slides
-- **Show Rating**: Display TMDb rating
-- **Show Names**: Display movie/TV show names under posters
-- **Make Poster Clickable**: Enable links to TMDb pages
-
-#### Per-Slider Settings
-For each slider (Hero, Popular, Top Rated, Now Playing, Sports):
-- **Enable/Disable**: Toggle slider on/off
-- **Reverse Direction**: Animate in reverse direction
-- **Stop on Hover**: Pause animation on hover
-
-#### Sports Slider Configuration
-- **Sports Keyword IDs**: Comma-separated TMDb keyword IDs for sports content
+### Settings Overview
+- **Slider Speeds**: Control animation duration for hero and row sliders
+- **Poster Width**: Customize poster image width
+- **Poster Gap**: Control spacing between posters
+- **Display Options**: Show/hide play icons, ratings, names
+- **Name Styling**: Color, font size, alignment, padding, margin
+- **Clickable Posters**: Enable/disable links to TMDb pages
 
 ## 📝 Shortcodes
 
-### Global Shortcodes (Movies & TV Shows)
+### Main Shortcodes
 
 | Shortcode | Description |
 |-----------|-------------|
-| `[tmdb_hero_slider]` | Backdrop hero slider (trending movies) |
-| `[tmdb_popular_slider]` | Popular movies row |
-| `[tmdb_top_rated_slider]` | Top rated movies row |
-| `[tmdb_now_playing_slider]` | Now playing movies row |
-| `[tmdb_sports_slider]` | Sports TV row |
+| `[tmdb_hero_slider]` | Backdrop hero slider (trending content) |
+| `[tmdb_popular_slider]` | Popular content row |
+| `[tmdb_top_rated_slider]` | Top rated content row |
+| `[tmdb_now_playing_slider]` | Now playing/on air content row |
 
-### Movie-Specific Shortcodes
+### Attributes
 
-| Shortcode | Description |
-|-----------|-------------|
-| `[tmdb_movie_hero_slider]` | Movie hero slider (trending movies) |
-| `[tmdb_movie_popular_slider]` | Popular movies row |
-| `[tmdb_movie_top_rated_slider]` | Top rated movies row |
-| `[tmdb_movie_now_playing_slider]` | Now playing movies row |
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `type` | Filter by content type (`movie` or `tv`) | `[tmdb_hero_slider type=movie]` |
+| `reverse` | Control animation direction (`on` or `off`) | `[tmdb_popular_slider reverse=on]` |
+| `stop_on_hover` | Control pause on hover (`on` or `off`) | `[tmdb_hero_slider stop_on_hover=off]` |
+| `speed` | Override animation speed (seconds) | `[tmdb_hero_slider speed=40]` |
+| `poster_width` | Override poster width (pixels) | `[tmdb_popular_slider poster_width=250]` |
 
-### TV Show-Specific Shortcodes
+### Examples
 
-| Shortcode | Description |
-|-----------|-------------|
-| `[tmdb_tv_hero_slider]` | TV show hero slider (trending TV shows) |
-| `[tmdb_tv_popular_slider]` | Popular TV shows row |
-| `[tmdb_tv_top_rated_slider]` | Top rated TV shows row |
-| `[tmdb_tv_on_air_slider]` | On air TV shows row |
-
-### Usage Examples
-
-**In Posts/Pages:**
-```
+```php
+// Basic usage
 [tmdb_hero_slider]
 [tmdb_popular_slider]
+
+// With type filter
+[tmdb_hero_slider type=movie]
+[tmdb_popular_slider type=tv]
+
+// Advanced examples
+[tmdb_hero_slider type=movie reverse=on]
+[tmdb_popular_slider type=tv speed=40 stop_on_hover=off]
+[tmdb_top_rated_slider reverse=on poster_width=250]
+[tmdb_now_playing_slider type=tv reverse=on speed=30]
 ```
 
-**In Elementor:**
-Simply add a "Shortcode" widget and paste any of the shortcodes above.
+**In Elementor**: Add a Shortcode widget and paste any shortcode.
 
-**In PHP Templates:**
-```php
-<?php echo do_shortcode('[tmdb_hero_slider]'); ?>
+**In PHP**: `<?php echo do_shortcode('[tmdb_hero_slider type=movie reverse=on]'); ?>`
+
+### Backward Compatibility
+
+Old shortcodes still work:
+- `[tmdb_movie_hero_slider]` → `[tmdb_hero_slider type=movie]`
+- `[tmdb_tv_hero_slider]` → `[tmdb_hero_slider type=tv]`
+
+## 🖼️ Dynamic Backgrounds
+
+Automatically apply TMDb movie/TV backgrounds to any div by adding a specific ID.
+
+### Available Background IDs
+
+| ID | Description |
+|----|-------------|
+| `#tmdb--popular-movie-background` | Popular movies |
+| `#tmdb--popular-tv-background` | Popular TV shows |
+| `#tmdb--trending-movie-background` | Trending movies |
+| `#tmdb--trending-tv-background` | Trending TV shows |
+| `#tmdb--top-rated-movie-background` | Top rated movies |
+| `#tmdb--top-rated-tv-background` | Top rated TV shows |
+| `#tmdb--now-playing-movie-background` | Now playing movies |
+| `#tmdb--on-air-tv-background` | On air TV shows |
+
+### Usage
+
+Simply add the ID to any div:
+
+```html
+<div id="tmdb--popular-movie-background" style="width: 100%; height: 400px;">
+    Your content here
+</div>
 ```
+
+The plugin will automatically:
+- Fetch backdrop images from TMDb
+- Apply them as backgrounds
+- Cycle through images at the configured interval
+- Apply overlay if enabled
+
+### Background Settings
+
+Configure in **Settings > TMDB Slider**:
+- **Background Position**: Center, Top, Bottom, Left, Right, etc.
+- **Background Size**: Cover, Contain, Auto, 100% 100%
+- **Change Interval**: How often to change background (seconds)
+- **Overlay**: Enable dark overlay with customizable color
 
 ## 🎨 Customization
 
-### Slider Behavior
+### Name Styling
+Control poster name appearance:
+- **Text Color**: Color picker
+- **Font Size**: Custom size (e.g., `16px`, `1.2em`)
+- **Text Align**: Left, Center, Right
+- **Padding**: CSS padding values (e.g., `5px`, `5px 10px`)
+- **Margin**: CSS margin values (e.g., `10px 0 0 0`)
 
-Each slider can be individually configured with:
-- **Reverse Animation**: Enable to make sliders scroll from right to left
-- **Stop on Hover**: Disable to keep animation running even on hover
-
-### Styling
-
-The plugin includes responsive CSS that works out of the box. You can override styles in your theme's CSS:
+### CSS Overrides
+Override styles in your theme's CSS:
 
 ```css
-/* Custom hero slider height */
 .tmdb-hero-slider {
     height: 600px;
 }
 
-/* Custom poster width */
 .tmdb-poster-wrapper {
     width: 250px;
 }
@@ -168,119 +164,32 @@ The plugin includes responsive CSS that works out of the box. You can override s
 
 ## 🔄 Updates
 
-The plugin includes automatic update functionality from GitHub. When a new release is published:
-
-1. You'll see an update notification in WordPress admin
-2. Click "Update Now" to install the latest version
-3. The plugin will automatically update from the GitHub release
-
-## 📱 Responsive Design
-
-All sliders are fully responsive and adapt to:
-- Desktop screens
-- Tablets
-- Mobile devices
-
-Poster sizes and slider heights automatically adjust for optimal viewing on all devices.
-
-## 🛠️ Development
-
-### File Structure
-
-```
-tmdb-slider/
-├── assets/
-│   ├── css/
-│   │   └── tmdb-slider.css
-│   └── js/
-│       └── tmdb-slider.js
-├── includes/
-│   ├── class-tmdb-slider-admin.php
-│   ├── class-tmdb-slider-api.php
-│   ├── class-tmdb-slider-front.php
-│   ├── class-tmdb-slider-plugin.php
-│   └── class-tmdb-slider-updater.php
-└── tmdb-slider.php
-```
-
-### Hooks & Filters
-
-The plugin follows WordPress coding standards and can be extended using standard WordPress hooks and filters.
+Automatic updates from GitHub releases. Update notifications appear in WordPress admin.
 
 ## 🐛 Troubleshooting
 
-### Slider Not Displaying
+**Slider not displaying?**
+- Verify API key is configured correctly
+- Check API connection status in settings
+- Clear caching plugins
 
-1. **Check API Key**: Ensure your TMDb API key is correctly configured
-2. **Check Connection**: Verify API connection status in settings
-3. **Check Shortcode**: Make sure the slider is enabled in settings
-4. **Clear Cache**: Clear any caching plugins if used
-
-### API Errors
-
-- Verify your API key is valid and active
-- Check your server's ability to make external API calls
-- Ensure your hosting allows outbound HTTPS connections
+**API errors?**
+- Ensure API key is valid and active
+- Check server can make external HTTPS calls
 
 ## 📄 License
 
-This plugin is licensed under the GPL v2 or later.
-
-```
-Copyright (C) 2025 Ranber
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-```
+GPL v2 or later
 
 ## 👤 Author
 
-**Ranber**
-- Website: [Ranber.com](https://Ranber.com)
-- GitHub: [@Saber4Dev](https://github.com/Saber4Dev)
+**Ranber** - [Ranber.com](https://Ranber.com) | [GitHub](https://github.com/Saber4Dev)
 
-## 🙏 Credits
+## 📞 Support & Contributing
 
-- **The Movie Database (TMDb)**: For providing the excellent API
-- **WordPress Community**: For the amazing platform
-
-## 📞 Support
-
-For issues, feature requests, or contributions, please use the [GitHub Issues](https://github.com/Saber4Dev/tmdb-slider/issues) page.
-
-## ⭐ Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 Changelog
-
-### 1.0.1
-- Added reverse direction option for each slider
-- Added stop on hover toggle for each slider
-- Implemented automatic updates from GitHub
-- Added Settings link in plugin row
-- Improved code structure and documentation
-
-### 1.0.0
-- Initial release
-- Basic slider functionality
-- TMDb API integration
-- Multiple shortcode support
+- **Issues**: [GitHub Issues](https://github.com/Saber4Dev/tmdb-slider/issues)
+- **Contributions**: Pull requests welcome!
 
 ---
 
 **Made with ❤️ for the WordPress community**
-

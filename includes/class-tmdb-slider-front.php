@@ -23,18 +23,19 @@ class TMDB_Slider_Front {
 	 */
 	public function init() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
-		// Global shortcodes (both movies and TV shows)
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+		
+		// Main flexible shortcodes
 		add_shortcode( 'tmdb_hero_slider', array( $this, 'render_hero_slider' ) );
 		add_shortcode( 'tmdb_popular_slider', array( $this, 'render_popular_slider' ) );
 		add_shortcode( 'tmdb_top_rated_slider', array( $this, 'render_top_rated_slider' ) );
 		add_shortcode( 'tmdb_now_playing_slider', array( $this, 'render_now_playing_slider' ) );
-		add_shortcode( 'tmdb_sports_slider', array( $this, 'render_sports_slider' ) );
-		// Movie-specific shortcodes
+		
+		// Backward compatibility - map old shortcodes to new system
 		add_shortcode( 'tmdb_movie_hero_slider', array( $this, 'render_movie_hero_slider' ) );
 		add_shortcode( 'tmdb_movie_popular_slider', array( $this, 'render_movie_popular_slider' ) );
 		add_shortcode( 'tmdb_movie_top_rated_slider', array( $this, 'render_movie_top_rated_slider' ) );
 		add_shortcode( 'tmdb_movie_now_playing_slider', array( $this, 'render_movie_now_playing_slider' ) );
-		// TV show-specific shortcodes
 		add_shortcode( 'tmdb_tv_hero_slider', array( $this, 'render_tv_hero_slider' ) );
 		add_shortcode( 'tmdb_tv_popular_slider', array( $this, 'render_tv_popular_slider' ) );
 		add_shortcode( 'tmdb_tv_top_rated_slider', array( $this, 'render_tv_top_rated_slider' ) );
@@ -42,10 +43,114 @@ class TMDB_Slider_Front {
 	}
 
 	/**
+	 * Register REST API routes for background feature
+	 */
+	public function register_rest_routes() {
+		register_rest_route(
+			'tmdb-slider/v1',
+			'/background/(?P<category>[a-zA-Z-]+)/(?P<type>[a-zA-Z]+)',
+			array(
+				'methods' => 'GET',
+				'callback' => array( $this, 'get_background_images' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+	}
+
+	/**
+	 * Get background images for REST API
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response data.
+	 */
+	public function get_background_images( $request ) {
+		$category = $request->get_param( 'category' );
+		$type = $request->get_param( 'type' );
+
+		$api_key = TMDB_Slider_API::get_api_key();
+		if ( ! $api_key ) {
+			return new WP_Error( 'no_api_key', __( 'TMDb API key not configured.', 'tmdb-slider' ), array( 'status' => 400 ) );
+		}
+
+		$items = array();
+		$limit = 10;
+
+		// Map category to API method
+		switch ( $category ) {
+			case 'popular':
+				if ( 'movie' === $type ) {
+					$items = TMDB_Slider_API::get_popular_movies( $limit );
+				} elseif ( 'tv' === $type ) {
+					$items = TMDB_Slider_API::get_popular_tv_shows( $limit );
+				}
+				break;
+			case 'trending':
+				if ( 'movie' === $type ) {
+					$items = TMDB_Slider_API::get_trending_movies( $limit );
+				} elseif ( 'tv' === $type ) {
+					$items = TMDB_Slider_API::get_trending_tv_shows( $limit );
+				}
+				break;
+			case 'top-rated':
+				if ( 'movie' === $type ) {
+					$items = TMDB_Slider_API::get_top_rated_movies( $limit );
+				} elseif ( 'tv' === $type ) {
+					$items = TMDB_Slider_API::get_top_rated_tv_shows( $limit );
+				}
+				break;
+			case 'now-playing':
+				if ( 'movie' === $type ) {
+					$items = TMDB_Slider_API::get_now_playing_movies( $limit );
+				} else {
+					return new WP_Error( 'invalid_type', __( 'Invalid type for now-playing category.', 'tmdb-slider' ), array( 'status' => 400 ) );
+				}
+				break;
+			case 'on-air':
+				if ( 'tv' === $type ) {
+					$items = TMDB_Slider_API::get_on_air_tv_shows( $limit );
+				} else {
+					return new WP_Error( 'invalid_type', __( 'Invalid type for on-air category.', 'tmdb-slider' ), array( 'status' => 400 ) );
+				}
+				break;
+			default:
+				return new WP_Error( 'invalid_category', __( 'Invalid category.', 'tmdb-slider' ), array( 'status' => 400 ) );
+		}
+
+		if ( is_wp_error( $items ) ) {
+			return $items;
+		}
+
+		if ( empty( $items ) ) {
+			return new WP_Error( 'no_items', __( 'No items found.', 'tmdb-slider' ), array( 'status' => 404 ) );
+		}
+
+		// Filter items with backdrops
+		$items_with_backdrops = array_filter( $items, function( $item ) {
+			return ! empty( $item['backdrop_path'] );
+		} );
+
+		if ( empty( $items_with_backdrops ) ) {
+			return new WP_Error( 'no_backdrops', __( 'No items with backdrops found.', 'tmdb-slider' ), array( 'status' => 404 ) );
+		}
+
+		// Extract backdrop URLs
+		$backgrounds = array();
+		foreach ( $items_with_backdrops as $item ) {
+			$backgrounds[] = array(
+				'url' => TMDB_Slider_API::get_image_url( $item['backdrop_path'], 'w1280' ),
+				'title' => isset( $item['title'] ) ? $item['title'] : ( isset( $item['name'] ) ? $item['name'] : '' ),
+			);
+		}
+
+		return rest_ensure_response( $backgrounds );
+	}
+
+	/**
 	 * Enqueue frontend assets
 	 */
 	public function enqueue_assets() {
-		// Only enqueue if shortcodes are used on the page
+		// Always enqueue assets (for background feature that works via IDs)
+		// Shortcodes are checked, but backgrounds work via ID detection in JS
 		global $post;
 		$has_shortcode = false;
 
@@ -55,7 +160,6 @@ class TMDB_Slider_Front {
 				'tmdb_popular_slider',
 				'tmdb_top_rated_slider',
 				'tmdb_now_playing_slider',
-				'tmdb_sports_slider',
 				'tmdb_movie_hero_slider',
 				'tmdb_movie_popular_slider',
 				'tmdb_movie_top_rated_slider',
@@ -74,7 +178,8 @@ class TMDB_Slider_Front {
 			}
 		}
 
-		if ( $has_shortcode ) {
+		// Always enqueue for background feature (works via ID detection in JS)
+		if ( $has_shortcode || true ) {
 			wp_enqueue_style(
 				'tmdb-slider-css',
 				TMDB_SLIDER_PLUGIN_URL . 'assets/css/tmdb-slider.css',
@@ -89,18 +194,86 @@ class TMDB_Slider_Front {
 				TMDB_SLIDER_VERSION,
 				true
 			);
+
+			// Localize script with settings and REST API URL
+			$settings = $this->get_slider_settings();
+			wp_localize_script(
+				'tmdb-slider-js',
+				'tmdbSlider',
+				array(
+					'apiUrl' => rest_url( 'tmdb-slider/v1/background/' ),
+					'nonce' => wp_create_nonce( 'wp_rest' ),
+					'bgSettings' => array(
+						'position' => isset( $settings['bg_position'] ) ? $settings['bg_position'] : 'center',
+						'size' => isset( $settings['bg_size'] ) ? $settings['bg_size'] : 'cover',
+						'overlay' => isset( $settings['bg_overlay'] ) ? (int) $settings['bg_overlay'] : 0,
+						'overlayColor' => isset( $settings['bg_overlay_color'] ) ? $settings['bg_overlay_color'] : '#000000',
+						'changeInterval' => isset( $settings['bg_change_interval'] ) ? absint( $settings['bg_change_interval'] ) : 5,
+					),
+				)
+			);
 		}
 	}
 
 	/**
-	 * Check if a slider is enabled
+	 * Parse shortcode attributes with defaults
 	 *
-	 * @param string $slider_key Slider key.
-	 * @return bool True if enabled.
+	 * @param array  $atts Shortcode attributes.
+	 * @param string $slider_type Slider type (hero, popular, etc.).
+	 * @return array Parsed attributes.
 	 */
-	private function is_slider_enabled( $slider_key ) {
-		$settings = get_option( 'tmdb_slider_settings', array() );
-		return isset( $settings[ $slider_key ] ) && 1 === (int) $settings[ $slider_key ];
+	private function parse_attributes( $atts, $slider_type = 'hero' ) {
+		$atts = shortcode_atts(
+			array(
+				'type' => '', // 'movie', 'tv', or empty for default
+				'reverse' => '', // 'on', 'off', or empty for settings default
+				'stop_on_hover' => '', // 'on', 'off', or empty for settings default
+				'speed' => '', // Override speed (number in seconds)
+				'poster_width' => '', // Override poster width (for row sliders)
+			),
+			$atts,
+			'tmdb_' . $slider_type . '_slider'
+		);
+
+		// Normalize type
+		$type = strtolower( trim( $atts['type'] ) );
+		if ( ! in_array( $type, array( 'movie', 'tv' ), true ) ) {
+			$type = ''; // Default behavior
+		}
+
+		// Normalize reverse
+		$reverse = strtolower( trim( $atts['reverse'] ) );
+		if ( 'on' === $reverse || 'yes' === $reverse || '1' === $reverse || 'true' === $reverse ) {
+			$reverse = 1;
+		} elseif ( 'off' === $reverse || 'no' === $reverse || '0' === $reverse || 'false' === $reverse ) {
+			$reverse = 0;
+		} else {
+			$reverse = null; // Use settings default
+		}
+
+		// Normalize stop_on_hover
+		$stop_on_hover = strtolower( trim( $atts['stop_on_hover'] ) );
+		if ( 'on' === $stop_on_hover || 'yes' === $stop_on_hover || '1' === $stop_on_hover || 'true' === $stop_on_hover ) {
+			$stop_on_hover = 1;
+		} elseif ( 'off' === $stop_on_hover || 'no' === $stop_on_hover || '0' === $stop_on_hover || 'false' === $stop_on_hover ) {
+			$stop_on_hover = 0;
+		} else {
+			$stop_on_hover = null; // Use settings default
+		}
+
+		// Parse speed
+		$speed = ! empty( $atts['speed'] ) ? absint( $atts['speed'] ) : null;
+
+		// Parse poster width
+		$poster_width = ! empty( $atts['poster_width'] ) ? absint( $atts['poster_width'] ) : null;
+
+		return array(
+			'type' => $type,
+			'reverse' => $reverse,
+			'stop_on_hover' => $stop_on_hover,
+			'speed' => $speed,
+			'poster_width' => $poster_width,
+		);
 	}
 
 	/**
@@ -117,17 +290,26 @@ class TMDB_Slider_Front {
 			'show_play_icon' => isset( $settings['show_play_icon'] ) ? (int) $settings['show_play_icon'] : 1,
 			'show_rating' => isset( $settings['show_rating'] ) ? (int) $settings['show_rating'] : 1,
 			'show_names' => isset( $settings['show_names'] ) ? (int) $settings['show_names'] : 1,
+			'name_color' => isset( $settings['name_color'] ) ? $settings['name_color'] : '#333333',
+			'name_padding' => isset( $settings['name_padding'] ) ? $settings['name_padding'] : '0',
+			'name_margin' => isset( $settings['name_margin'] ) ? $settings['name_margin'] : '10px 0 0 0',
+			'name_text_align' => isset( $settings['name_text_align'] ) ? $settings['name_text_align'] : 'center',
+			'name_font_size' => isset( $settings['name_font_size'] ) ? $settings['name_font_size'] : '14px',
+			'poster_gap' => isset( $settings['poster_gap'] ) ? absint( $settings['poster_gap'] ) : 15,
 			'make_poster_clickable' => isset( $settings['make_poster_clickable'] ) ? (int) $settings['make_poster_clickable'] : 1,
 			'reverse_hero_slider' => isset( $settings['reverse_hero_slider'] ) ? (int) $settings['reverse_hero_slider'] : 0,
 			'reverse_popular_slider' => isset( $settings['reverse_popular_slider'] ) ? (int) $settings['reverse_popular_slider'] : 0,
 			'reverse_top_rated_slider' => isset( $settings['reverse_top_rated_slider'] ) ? (int) $settings['reverse_top_rated_slider'] : 0,
 			'reverse_now_playing_slider' => isset( $settings['reverse_now_playing_slider'] ) ? (int) $settings['reverse_now_playing_slider'] : 0,
-			'reverse_sports_slider' => isset( $settings['reverse_sports_slider'] ) ? (int) $settings['reverse_sports_slider'] : 0,
 			'stop_on_hover_hero_slider' => isset( $settings['stop_on_hover_hero_slider'] ) ? (int) $settings['stop_on_hover_hero_slider'] : 1,
 			'stop_on_hover_popular_slider' => isset( $settings['stop_on_hover_popular_slider'] ) ? (int) $settings['stop_on_hover_popular_slider'] : 1,
 			'stop_on_hover_top_rated_slider' => isset( $settings['stop_on_hover_top_rated_slider'] ) ? (int) $settings['stop_on_hover_top_rated_slider'] : 1,
 			'stop_on_hover_now_playing_slider' => isset( $settings['stop_on_hover_now_playing_slider'] ) ? (int) $settings['stop_on_hover_now_playing_slider'] : 1,
-			'stop_on_hover_sports_slider' => isset( $settings['stop_on_hover_sports_slider'] ) ? (int) $settings['stop_on_hover_sports_slider'] : 1,
+			'bg_position' => isset( $settings['bg_position'] ) ? $settings['bg_position'] : 'center',
+			'bg_size' => isset( $settings['bg_size'] ) ? $settings['bg_size'] : 'cover',
+			'bg_overlay' => isset( $settings['bg_overlay'] ) ? (int) $settings['bg_overlay'] : 0,
+			'bg_overlay_color' => isset( $settings['bg_overlay_color'] ) ? $settings['bg_overlay_color'] : '#000000',
+			'bg_change_interval' => isset( $settings['bg_change_interval'] ) ? absint( $settings['bg_change_interval'] ) : 5,
 		);
 	}
 
@@ -138,53 +320,63 @@ class TMDB_Slider_Front {
 	 * @return string HTML output.
 	 */
 	public function render_hero_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_hero_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
+		$parsed = $this->parse_attributes( $atts, 'hero' );
 
 		$api_key = TMDB_Slider_API::get_api_key();
 		if ( ! $api_key ) {
 			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
 		}
 
-		$movies = TMDB_Slider_API::get_trending_movies( 10 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
+		// Determine content type
+		$type = $parsed['type'];
+		if ( 'tv' === $type ) {
+			$items = TMDB_Slider_API::get_trending_tv_shows( 10 );
+		} elseif ( 'movie' === $type ) {
+			$items = TMDB_Slider_API::get_trending_movies( 10 );
+		} else {
+			// Default: movies
+			$items = TMDB_Slider_API::get_trending_movies( 10 );
 		}
 
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
+		if ( is_wp_error( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html( $items->get_error_message() ) . '</p>';
+		}
+
+		if ( empty( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html__( 'No content found.', 'tmdb-slider' ) . '</p>';
 		}
 
 		$settings = $this->get_slider_settings();
-		$speed = $settings['hero_slider_speed'];
+		$speed = $parsed['speed'] !== null ? $parsed['speed'] : $settings['hero_slider_speed'];
 		$show_play_icon = $settings['show_play_icon'];
 		$show_rating = $settings['show_rating'];
 		$make_clickable = $settings['make_poster_clickable'];
+		$reverse = $parsed['reverse'] !== null ? $parsed['reverse'] : $settings['reverse_hero_slider'];
+		$stop_on_hover = $parsed['stop_on_hover'] !== null ? $parsed['stop_on_hover'] : $settings['stop_on_hover_hero_slider'];
+		$content_type = 'tv' === $type ? 'tv' : 'movie';
 
-		// Filter movies with backdrops
-		$movies_with_backdrops = array_filter( $movies, function( $movie ) {
-			return ! empty( $movie['backdrop_path'] );
+		// Filter items with backdrops
+		$items_with_backdrops = array_filter( $items, function( $item ) {
+			return ! empty( $item['backdrop_path'] );
 		} );
 
-		if ( empty( $movies_with_backdrops ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies with backdrops found.', 'tmdb-slider' ) . '</p>';
+		if ( empty( $items_with_backdrops ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html__( 'No content with backdrops found.', 'tmdb-slider' ) . '</p>';
 		}
 
 		// Duplicate items for infinite scroll
-		$all_movies = array_merge( $movies_with_backdrops, $movies_with_backdrops );
+		$all_items = array_merge( $items_with_backdrops, $items_with_backdrops );
 
 		ob_start();
 		?>
-		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>">
+		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
 			<div class="tmdb-hero-slider-track">
-				<?php foreach ( $all_movies as $movie ) : ?>
+				<?php foreach ( $all_items as $item ) : ?>
 					<?php
-					$backdrop_url = TMDB_Slider_API::get_image_url( $movie['backdrop_path'], 'w1280' );
-					$tmdb_url = TMDB_Slider_API::get_tmdb_url( $movie['id'], 'movie' );
-					$rating = isset( $movie['vote_average'] ) ? number_format( $movie['vote_average'], 1 ) : '0.0';
-					$title = isset( $movie['title'] ) ? $movie['title'] : ( isset( $movie['name'] ) ? $movie['name'] : '' );
+					$backdrop_url = TMDB_Slider_API::get_image_url( $item['backdrop_path'], 'w1280' );
+					$tmdb_url = TMDB_Slider_API::get_tmdb_url( $item['id'], $content_type );
+					$rating = isset( $item['vote_average'] ) ? number_format( $item['vote_average'], 1 ) : '0.0';
+					$title = isset( $item['title'] ) ? $item['title'] : ( isset( $item['name'] ) ? $item['name'] : '' );
 					?>
 					<div class="tmdb-hero-slide">
 						<?php if ( $make_clickable ) : ?>
@@ -217,26 +409,36 @@ class TMDB_Slider_Front {
 	 * @return string HTML output.
 	 */
 	public function render_popular_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_popular_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
+		$parsed = $this->parse_attributes( $atts, 'popular' );
 
 		$api_key = TMDB_Slider_API::get_api_key();
 		if ( ! $api_key ) {
 			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
 		}
 
-		$movies = TMDB_Slider_API::get_popular_movies( 20 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
+		// Determine content type
+		$type = $parsed['type'];
+		if ( 'tv' === $type ) {
+			$items = TMDB_Slider_API::get_popular_tv_shows( 20 );
+			$content_type = 'tv';
+		} elseif ( 'movie' === $type ) {
+			$items = TMDB_Slider_API::get_popular_movies( 20 );
+			$content_type = 'movie';
+		} else {
+			// Default: movies
+			$items = TMDB_Slider_API::get_popular_movies( 20 );
+			$content_type = 'movie';
 		}
 
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
+		if ( is_wp_error( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html( $items->get_error_message() ) . '</p>';
 		}
 
-		return $this->render_row_slider( $movies, 'popular', 'movie' );
+		if ( empty( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html__( 'No content found.', 'tmdb-slider' ) . '</p>';
+		}
+
+		return $this->render_row_slider( $items, 'popular', $content_type, $parsed );
 	}
 
 	/**
@@ -246,26 +448,36 @@ class TMDB_Slider_Front {
 	 * @return string HTML output.
 	 */
 	public function render_top_rated_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_top_rated_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
+		$parsed = $this->parse_attributes( $atts, 'top_rated' );
 
 		$api_key = TMDB_Slider_API::get_api_key();
 		if ( ! $api_key ) {
 			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
 		}
 
-		$movies = TMDB_Slider_API::get_top_rated_movies( 20 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
+		// Determine content type
+		$type = $parsed['type'];
+		if ( 'tv' === $type ) {
+			$items = TMDB_Slider_API::get_top_rated_tv_shows( 20 );
+			$content_type = 'tv';
+		} elseif ( 'movie' === $type ) {
+			$items = TMDB_Slider_API::get_top_rated_movies( 20 );
+			$content_type = 'movie';
+		} else {
+			// Default: movies
+			$items = TMDB_Slider_API::get_top_rated_movies( 20 );
+			$content_type = 'movie';
 		}
 
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
+		if ( is_wp_error( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html( $items->get_error_message() ) . '</p>';
 		}
 
-		return $this->render_row_slider( $movies, 'top-rated', 'movie' );
+		if ( empty( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html__( 'No content found.', 'tmdb-slider' ) . '</p>';
+		}
+
+		return $this->render_row_slider( $items, 'top-rated', $content_type, $parsed );
 	}
 
 	/**
@@ -275,398 +487,125 @@ class TMDB_Slider_Front {
 	 * @return string HTML output.
 	 */
 	public function render_now_playing_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_now_playing_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
+		$parsed = $this->parse_attributes( $atts, 'now_playing' );
 
 		$api_key = TMDB_Slider_API::get_api_key();
 		if ( ! $api_key ) {
 			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
 		}
 
-		$movies = TMDB_Slider_API::get_now_playing_movies( 20 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
+		// Determine content type
+		$type = $parsed['type'];
+		if ( 'tv' === $type ) {
+			$items = TMDB_Slider_API::get_on_air_tv_shows( 20 );
+			$content_type = 'tv';
+		} elseif ( 'movie' === $type ) {
+			$items = TMDB_Slider_API::get_now_playing_movies( 20 );
+			$content_type = 'movie';
+		} else {
+			// Default: movies
+			$items = TMDB_Slider_API::get_now_playing_movies( 20 );
+			$content_type = 'movie';
 		}
 
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
+		if ( is_wp_error( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html( $items->get_error_message() ) . '</p>';
 		}
 
-		return $this->render_row_slider( $movies, 'now-playing', 'movie' );
+		if ( empty( $items ) ) {
+			return '<p class="tmdb-slider-error">' . esc_html__( 'No content found.', 'tmdb-slider' ) . '</p>';
+		}
+
+		return $this->render_row_slider( $items, 'now-playing', $content_type, $parsed );
 	}
 
-	/**
-	 * Render sports slider shortcode
-	 *
-	 * @param array $atts Shortcode attributes.
-	 * @return string HTML output.
-	 */
-	public function render_sports_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_sports_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$settings = get_option( 'tmdb_slider_settings', array() );
-		$sports_keywords = isset( $settings['sports_keywords'] ) ? trim( $settings['sports_keywords'] ) : '';
-
-		if ( empty( $sports_keywords ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDB Slider: Please set Sports keyword IDs in settings for this slider.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$shows = TMDB_Slider_API::get_sports_tv_shows( $sports_keywords, 20 );
-
-		if ( is_wp_error( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $shows->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No TV shows found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $shows, 'sports', 'tv' );
-	}
 
 	/**
-	 * Render movie hero slider shortcode
+	 * Backward compatibility: Movie hero slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_movie_hero_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_hero_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$movies = TMDB_Slider_API::get_trending_movies( 10 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$settings = $this->get_slider_settings();
-		$speed = $settings['hero_slider_speed'];
-		$show_play_icon = $settings['show_play_icon'];
-		$show_rating = $settings['show_rating'];
-		$make_clickable = $settings['make_poster_clickable'];
-		$reverse = $settings['reverse_hero_slider'];
-		$stop_on_hover = $settings['stop_on_hover_hero_slider'];
-
-		// Filter movies with backdrops
-		$movies_with_backdrops = array_filter( $movies, function( $movie ) {
-			return ! empty( $movie['backdrop_path'] );
-		} );
-
-		if ( empty( $movies_with_backdrops ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies with backdrops found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		// Duplicate items for infinite scroll
-		$all_movies = array_merge( $movies_with_backdrops, $movies_with_backdrops );
-
-		ob_start();
-		?>
-		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
-			<div class="tmdb-hero-slider-track">
-				<?php foreach ( $all_movies as $movie ) : ?>
-					<?php
-					$backdrop_url = TMDB_Slider_API::get_image_url( $movie['backdrop_path'], 'w1280' );
-					$tmdb_url = TMDB_Slider_API::get_tmdb_url( $movie['id'], 'movie' );
-					$rating = isset( $movie['vote_average'] ) ? number_format( $movie['vote_average'], 1 ) : '0.0';
-					$title = isset( $movie['title'] ) ? $movie['title'] : '';
-					?>
-					<div class="tmdb-hero-slide">
-						<?php if ( $make_clickable ) : ?>
-							<a href="<?php echo esc_url( $tmdb_url ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php endif; ?>
-						<div class="tmdb-hero-backdrop" style="background-image: url('<?php echo esc_url( $backdrop_url ); ?>');"></div>
-						<div class="tmdb-hero-overlay">
-							<?php if ( $show_play_icon ) : ?>
-								<div class="tmdb-play-icon">▶</div>
-							<?php endif; ?>
-							<?php if ( $show_rating ) : ?>
-								<div class="tmdb-rating">⭐ <?php echo esc_html( $rating ); ?></div>
-							<?php endif; ?>
-						</div>
-						<?php if ( $make_clickable ) : ?>
-							</a>
-						<?php endif; ?>
-					</div>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php
-		return ob_get_clean();
+		$atts['type'] = 'movie';
+		return $this->render_hero_slider( $atts );
 	}
 
 	/**
-	 * Render movie popular slider shortcode
+	 * Backward compatibility: Movie popular slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_movie_popular_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_popular_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$movies = TMDB_Slider_API::get_popular_movies( 20 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $movies, 'movie-popular', 'movie' );
+		$atts['type'] = 'movie';
+		return $this->render_popular_slider( $atts );
 	}
 
 	/**
-	 * Render movie top rated slider shortcode
+	 * Backward compatibility: Movie top rated slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_movie_top_rated_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_top_rated_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$movies = TMDB_Slider_API::get_top_rated_movies( 20 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $movies, 'movie-top-rated', 'movie' );
+		$atts['type'] = 'movie';
+		return $this->render_top_rated_slider( $atts );
 	}
 
 	/**
-	 * Render movie now playing slider shortcode
+	 * Backward compatibility: Movie now playing slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_movie_now_playing_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_now_playing_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$movies = TMDB_Slider_API::get_now_playing_movies( 20 );
-
-		if ( is_wp_error( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $movies->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $movies ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No movies found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $movies, 'movie-now-playing', 'movie' );
+		$atts['type'] = 'movie';
+		return $this->render_now_playing_slider( $atts );
 	}
 
 	/**
-	 * Render TV hero slider shortcode
+	 * Backward compatibility: TV hero slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_tv_hero_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_hero_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$shows = TMDB_Slider_API::get_trending_tv_shows( 10 );
-
-		if ( is_wp_error( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $shows->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No TV shows found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$settings = $this->get_slider_settings();
-		$speed = $settings['hero_slider_speed'];
-		$show_play_icon = $settings['show_play_icon'];
-		$show_rating = $settings['show_rating'];
-		$make_clickable = $settings['make_poster_clickable'];
-		$reverse = $settings['reverse_hero_slider'];
-		$stop_on_hover = $settings['stop_on_hover_hero_slider'];
-
-		// Filter shows with backdrops
-		$shows_with_backdrops = array_filter( $shows, function( $show ) {
-			return ! empty( $show['backdrop_path'] );
-		} );
-
-		if ( empty( $shows_with_backdrops ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No TV shows with backdrops found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		// Duplicate items for infinite scroll
-		$all_shows = array_merge( $shows_with_backdrops, $shows_with_backdrops );
-
-		ob_start();
-		?>
-		<div class="tmdb-hero-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
-			<div class="tmdb-hero-slider-track">
-				<?php foreach ( $all_shows as $show ) : ?>
-					<?php
-					$backdrop_url = TMDB_Slider_API::get_image_url( $show['backdrop_path'], 'w1280' );
-					$tmdb_url = TMDB_Slider_API::get_tmdb_url( $show['id'], 'tv' );
-					$rating = isset( $show['vote_average'] ) ? number_format( $show['vote_average'], 1 ) : '0.0';
-					$title = isset( $show['name'] ) ? $show['name'] : '';
-					?>
-					<div class="tmdb-hero-slide">
-						<?php if ( $make_clickable ) : ?>
-							<a href="<?php echo esc_url( $tmdb_url ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php endif; ?>
-						<div class="tmdb-hero-backdrop" style="background-image: url('<?php echo esc_url( $backdrop_url ); ?>');"></div>
-						<div class="tmdb-hero-overlay">
-							<?php if ( $show_play_icon ) : ?>
-								<div class="tmdb-play-icon">▶</div>
-							<?php endif; ?>
-							<?php if ( $show_rating ) : ?>
-								<div class="tmdb-rating">⭐ <?php echo esc_html( $rating ); ?></div>
-							<?php endif; ?>
-						</div>
-						<?php if ( $make_clickable ) : ?>
-							</a>
-						<?php endif; ?>
-					</div>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php
-		return ob_get_clean();
+		$atts['type'] = 'tv';
+		return $this->render_hero_slider( $atts );
 	}
 
 	/**
-	 * Render TV popular slider shortcode
+	 * Backward compatibility: TV popular slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_tv_popular_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_popular_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$shows = TMDB_Slider_API::get_popular_tv_shows( 20 );
-
-		if ( is_wp_error( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $shows->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No TV shows found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $shows, 'tv-popular', 'tv' );
+		$atts['type'] = 'tv';
+		return $this->render_popular_slider( $atts );
 	}
 
 	/**
-	 * Render TV top rated slider shortcode
+	 * Backward compatibility: TV top rated slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_tv_top_rated_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_top_rated_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$shows = TMDB_Slider_API::get_top_rated_tv_shows( 20 );
-
-		if ( is_wp_error( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $shows->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No TV shows found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $shows, 'tv-top-rated', 'tv' );
+		$atts['type'] = 'tv';
+		return $this->render_top_rated_slider( $atts );
 	}
 
 	/**
-	 * Render TV on air slider shortcode
+	 * Backward compatibility: TV on air slider
 	 *
 	 * @param array $atts Shortcode attributes.
 	 * @return string HTML output.
 	 */
 	public function render_tv_on_air_slider( $atts ) {
-		if ( ! $this->is_slider_enabled( 'enable_now_playing_slider' ) ) {
-			return '<p class="tmdb-slider-disabled">' . esc_html__( 'This slider is disabled in TMDB Slider settings.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$api_key = TMDB_Slider_API::get_api_key();
-		if ( ! $api_key ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'TMDb Slider: API key not configured.', 'tmdb-slider' ) . '</p>';
-		}
-
-		$shows = TMDB_Slider_API::get_on_air_tv_shows( 20 );
-
-		if ( is_wp_error( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html( $shows->get_error_message() ) . '</p>';
-		}
-
-		if ( empty( $shows ) ) {
-			return '<p class="tmdb-slider-error">' . esc_html__( 'No TV shows found.', 'tmdb-slider' ) . '</p>';
-		}
-
-		return $this->render_row_slider( $shows, 'tv-on-air', 'tv' );
+		$atts['type'] = 'tv';
+		return $this->render_now_playing_slider( $atts );
 	}
 
 	/**
@@ -675,32 +614,48 @@ class TMDB_Slider_Front {
 	 * @param array  $items Array of movie/TV show data.
 	 * @param string $slider_id Unique ID for this slider instance.
 	 * @param string $type 'movie' or 'tv'.
+	 * @param array  $parsed Parsed shortcode attributes.
 	 * @return string HTML output.
 	 */
-	private function render_row_slider( $items, $slider_id, $type = 'movie' ) {
+	private function render_row_slider( $items, $slider_id, $type = 'movie', $parsed = array() ) {
 		$settings = $this->get_slider_settings();
-		$speed = $settings['row_slider_speed'];
-		$poster_width = $settings['poster_width'];
+		$speed = isset( $parsed['speed'] ) && $parsed['speed'] !== null ? $parsed['speed'] : $settings['row_slider_speed'];
+		$poster_width = isset( $parsed['poster_width'] ) && $parsed['poster_width'] !== null ? $parsed['poster_width'] : $settings['poster_width'];
 		$show_play_icon = $settings['show_play_icon'];
 		$show_rating = $settings['show_rating'];
 		$show_names = $settings['show_names'];
+		$name_color = $settings['name_color'];
+		$name_padding = $settings['name_padding'];
+		$name_margin = $settings['name_margin'];
+		$name_text_align = $settings['name_text_align'];
+		$name_font_size = $settings['name_font_size'];
+		$poster_gap = $settings['poster_gap'];
 		$make_clickable = $settings['make_poster_clickable'];
 		
-		// Determine reverse and stop on hover based on slider type
+		// Determine reverse and stop on hover
 		$reverse = 0;
 		$stop_on_hover = 1;
-		if ( 'popular' === $slider_id || 'movie-popular' === $slider_id || 'tv-popular' === $slider_id ) {
-			$reverse = $settings['reverse_popular_slider'];
-			$stop_on_hover = $settings['stop_on_hover_popular_slider'];
-		} elseif ( 'top-rated' === $slider_id || 'movie-top-rated' === $slider_id || 'tv-top-rated' === $slider_id ) {
-			$reverse = $settings['reverse_top_rated_slider'];
-			$stop_on_hover = $settings['stop_on_hover_top_rated_slider'];
-		} elseif ( 'now-playing' === $slider_id || 'movie-now-playing' === $slider_id || 'tv-on-air' === $slider_id ) {
-			$reverse = $settings['reverse_now_playing_slider'];
-			$stop_on_hover = $settings['stop_on_hover_now_playing_slider'];
-		} elseif ( 'sports' === $slider_id ) {
-			$reverse = $settings['reverse_sports_slider'];
-			$stop_on_hover = $settings['stop_on_hover_sports_slider'];
+		
+		// Use parsed attributes if provided, otherwise use settings
+		if ( isset( $parsed['reverse'] ) && $parsed['reverse'] !== null ) {
+			$reverse = $parsed['reverse'];
+		} else {
+			// Get from settings based on slider type
+			if ( 'popular' === $slider_id ) {
+				$reverse = $settings['reverse_popular_slider'];
+				$stop_on_hover = $settings['stop_on_hover_popular_slider'];
+			} elseif ( 'top-rated' === $slider_id ) {
+				$reverse = $settings['reverse_top_rated_slider'];
+				$stop_on_hover = $settings['stop_on_hover_top_rated_slider'];
+			} elseif ( 'now-playing' === $slider_id ) {
+				$reverse = $settings['reverse_now_playing_slider'];
+				$stop_on_hover = $settings['stop_on_hover_now_playing_slider'];
+			}
+		}
+		
+		// Override stop_on_hover if provided in attributes
+		if ( isset( $parsed['stop_on_hover'] ) && $parsed['stop_on_hover'] !== null ) {
+			$stop_on_hover = $parsed['stop_on_hover'];
 		}
 
 		// Filter items with posters
@@ -717,7 +672,7 @@ class TMDB_Slider_Front {
 
 		ob_start();
 		?>
-		<div class="tmdb-row-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-poster-width="<?php echo esc_attr( $poster_width ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
+		<div class="tmdb-row-slider" data-speed="<?php echo esc_attr( $speed ); ?>" data-poster-width="<?php echo esc_attr( $poster_width ); ?>" data-poster-gap="<?php echo esc_attr( $poster_gap ); ?>" data-reverse="<?php echo esc_attr( $reverse ); ?>" data-stop-on-hover="<?php echo esc_attr( $stop_on_hover ); ?>">
 			<div class="tmdb-row-slider-track">
 				<?php foreach ( $all_items as $item ) : ?>
 					<?php
@@ -745,7 +700,17 @@ class TMDB_Slider_Front {
 							</a>
 						<?php endif; ?>
 						<?php if ( $show_names && ! empty( $title ) ) : ?>
-							<div class="tmdb-poster-name"><?php echo esc_html( $title ); ?></div>
+							<?php
+							$name_style = sprintf(
+								'color: %s; padding: %s; margin: %s; text-align: %s; font-size: %s;',
+								esc_attr( $name_color ),
+								esc_attr( $name_padding ),
+								esc_attr( $name_margin ),
+								esc_attr( $name_text_align ),
+								esc_attr( $name_font_size )
+							);
+							?>
+							<div class="tmdb-poster-name" style="<?php echo $name_style; ?>"><?php echo esc_html( $title ); ?></div>
 						<?php endif; ?>
 					</div>
 				<?php endforeach; ?>
@@ -755,4 +720,3 @@ class TMDB_Slider_Front {
 		return ob_get_clean();
 	}
 }
-

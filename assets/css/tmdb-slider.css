@@ -158,7 +158,7 @@
 	width: fit-content;
 	animation: tmdb-row-scroll linear infinite;
 	will-change: transform;
-	gap: 15px;
+	gap: var(--poster-gap, 15px);
 }
 
 .tmdb-row-slide {
@@ -256,20 +256,11 @@
 
 /* Row Poster Name */
 .tmdb-poster-name {
-	margin-top: 10px;
-	font-size: 14px;
 	font-weight: 500;
-	color: #333;
-	text-align: center;
 	max-width: var(--poster-width, 220px);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-}
-
-.tmdb-row-slide a + .tmdb-poster-name,
-.tmdb-row-slide .tmdb-poster-wrapper + .tmdb-poster-name {
-	margin-top: 10px;
 }
 
 /* Row Animation */
@@ -342,5 +333,13 @@
 
 .tmdb-row-slider .tmdb-row-slider-track {
 	animation-duration: calc(var(--speed, 60) * 1s);
+}
+
+/* ============================================
+   Dynamic Background Feature
+   ============================================ */
+
+.tmdb-bg-overlay {
+	pointer-events: none;
 }
 
